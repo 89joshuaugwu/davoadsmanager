@@ -1,0 +1,39 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Whitelist doc ID must be the lowercased email, added manually via the Firebase Console.
+    function isWhitelisted() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/whitelistedUsers/$(request.auth.token.email));
+    }
+
+    match /whitelistedUsers/{email} {
+      // Anyone signed in can check membership (needed for the client-side gate);
+      // the list itself is only ever edited by hand in the console.
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    match /gmailAccounts/{docId} {
+      allow read, write: if isWhitelisted();
+    }
+
+    match /businessAccounts/{docId} {
+      allow read, write: if isWhitelisted();
+    }
+
+    match /adsAccounts/{docId} {
+      allow read, write: if isWhitelisted();
+    }
+
+    match /transactions/{docId} {
+      allow read, write: if isWhitelisted();
+    }
+  }
+}
