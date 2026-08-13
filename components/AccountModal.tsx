@@ -42,6 +42,12 @@ function todayInputDate(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+function formatInputDate(ts?: number): string {
+  if (!ts) return todayInputDate();
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 export function AccountModal({
   mode,
   cards,
@@ -66,23 +72,29 @@ export function AccountModal({
         case "add-gmail": {
           const password = String(form.get("password") ?? "");
           const encryptedPassword = await encryptPassword(password);
+          const createdAtStr = String(form.get("createdAt") ?? "");
           await createGmailAccount({
             email: String(form.get("email") ?? "").trim(),
             encryptedPassword,
             tiktokAccountName: String(form.get("tiktokAccountName") ?? "").trim(),
             tiktokManagerName: String(form.get("tiktokManagerName") ?? "").trim(),
             notes: String(form.get("notes") ?? "").trim(),
+            createdAt: createdAtStr ? new Date(createdAtStr + "T12:00:00").getTime() : undefined,
           });
           break;
         }
         case "edit-gmail": {
           const newPassword = String(form.get("password") ?? "").trim();
+          const createdAtStr = String(form.get("createdAt") ?? "");
           const patch: Parameters<typeof updateGmailAccount>[1] = {
             email: String(form.get("email") ?? "").trim(),
             tiktokAccountName: String(form.get("tiktokAccountName") ?? "").trim(),
             tiktokManagerName: String(form.get("tiktokManagerName") ?? "").trim(),
             notes: String(form.get("notes") ?? "").trim(),
           };
+          if (createdAtStr) {
+            patch.createdAt = new Date(createdAtStr + "T12:00:00").getTime();
+          }
           if (newPassword) {
             patch.encryptedPassword = await encryptPassword(newPassword);
           }
@@ -90,18 +102,23 @@ export function AccountModal({
           break;
         }
         case "add-business": {
+          const createdAtStr = String(form.get("createdAt") ?? "");
           await createBusinessAccount(mode.gmailAccountId, mode.gmailEmail, {
             name: String(form.get("name") ?? "").trim(),
             officialDomain: String(form.get("officialDomain") ?? "").trim(),
             initialFunding: Number(form.get("initialFunding") ?? 0),
+            createdAt: createdAtStr ? new Date(createdAtStr + "T12:00:00").getTime() : undefined,
           });
           break;
         }
         case "edit-business": {
-          await updateBusinessAccount(mode.business.id, {
+          const createdAtStr = String(form.get("createdAt") ?? "");
+          const patch: Parameters<typeof updateBusinessAccount>[1] = {
             name: String(form.get("name") ?? "").trim(),
             officialDomain: String(form.get("officialDomain") ?? "").trim(),
-          });
+          };
+          if (createdAtStr) patch.createdAt = new Date(createdAtStr + "T12:00:00").getTime();
+          await updateBusinessAccount(mode.business.id, patch);
           break;
         }
         case "add-funding": {
@@ -117,18 +134,23 @@ export function AccountModal({
           break;
         }
         case "add-ads": {
+          const createdAtStr = String(form.get("createdAt") ?? "");
           await createAdsAccount(mode.businessAccountId, mode.gmailAccountId, {
             name: String(form.get("name") ?? "").trim(),
             destinationUrl: String(form.get("destinationUrl") ?? "").trim(),
+            createdAt: createdAtStr ? new Date(createdAtStr + "T12:00:00").getTime() : undefined,
           });
           break;
         }
         case "edit-ads": {
-          await updateAdsAccount(mode.ads.id, {
+          const createdAtStr = String(form.get("createdAt") ?? "");
+          const patch: Parameters<typeof updateAdsAccount>[1] = {
             name: String(form.get("name") ?? "").trim(),
             destinationUrl: String(form.get("destinationUrl") ?? "").trim(),
             adStatus: form.get("adStatus") === "created" ? "created" : "not_created",
-          });
+          };
+          if (createdAtStr) patch.createdAt = new Date(createdAtStr + "T12:00:00").getTime();
+          await updateAdsAccount(mode.ads.id, patch);
           break;
         }
         case "add-daily-entry": {
@@ -252,6 +274,9 @@ function ModalFields({ mode, cards }: { mode: ModalMode; cards: Card[] }) {
           <Field label="Notes (optional)">
             <textarea name="notes" defaultValue={g?.notes} rows={2} className={inputClass} />
           </Field>
+          <Field label="Created Date">
+            <input name="createdAt" type="date" required defaultValue={formatInputDate(g?.createdAt)} max={todayInputDate()} className={inputClass} />
+          </Field>
         </>
       );
     }
@@ -267,6 +292,9 @@ function ModalFields({ mode, cards }: { mode: ModalMode; cards: Card[] }) {
           <Field label="Official domain (optional)">
             <input name="officialDomain" defaultValue={b?.officialDomain} className={inputClass} />
           </Field>
+          <Field label="Created Date">
+            <input name="createdAt" type="date" required defaultValue={formatInputDate(b?.createdAt)} max={todayInputDate()} className={inputClass} />
+          </Field>
           {!b && (
             <Field label="Initial funding (optional)">
               <input name="initialFunding" type="number" min={0} step="0.01" defaultValue={0} className={inputClass} />
@@ -277,7 +305,7 @@ function ModalFields({ mode, cards }: { mode: ModalMode; cards: Card[] }) {
     }
 
     case "add-funding": {
-      const linkedCards = cards.filter((c) => c.businessAccountId === mode.business.id && c.status === "active");
+      const linkedCards = cards.filter((c) => (c.businessAccountId === mode.business.id || !c.businessAccountId) && c.status === "active");
       return (
         <>
           <p className="text-sm text-ink-soft">
@@ -297,7 +325,7 @@ function ModalFields({ mode, cards }: { mode: ModalMode; cards: Card[] }) {
             </select>
             {linkedCards.length === 0 && (
               <p className="mt-1.5 text-xs text-ink-soft">
-                No cards linked to this business account yet — manage cards from the sidebar.
+                No active cards available — manage cards from the sidebar.
               </p>
             )}
           </Field>
@@ -318,6 +346,9 @@ function ModalFields({ mode, cards }: { mode: ModalMode; cards: Card[] }) {
           </Field>
           <Field label="Destination / bridge URL (optional)">
             <input name="destinationUrl" defaultValue={a?.destinationUrl} className={inputClass} />
+          </Field>
+          <Field label="Created Date">
+            <input name="createdAt" type="date" required defaultValue={formatInputDate(a?.createdAt)} max={todayInputDate()} className={inputClass} />
           </Field>
           {a && (
             <Field label="Ad creation status">

@@ -62,12 +62,13 @@ export async function createGmailAccount(data: {
   tiktokAccountName?: string;
   tiktokManagerName?: string;
   notes?: string;
+  createdAt?: number;
 }) {
   const now = Date.now();
   return addDoc(gmailCol, {
     ...data,
     status: "active" as GmailStatus,
-    createdAt: now,
+    createdAt: data.createdAt ?? now,
     updatedAt: now,
   });
 }
@@ -77,7 +78,7 @@ export async function updateGmailAccount(
   data: Partial<
     Pick<
       GmailAccount,
-      "email" | "encryptedPassword" | "tiktokAccountName" | "tiktokManagerName" | "notes" | "status"
+      "email" | "encryptedPassword" | "tiktokAccountName" | "tiktokManagerName" | "notes" | "status" | "createdAt"
     >
   >
 ) {
@@ -107,7 +108,7 @@ export async function deleteGmailAccount(id: string) {
 export async function createBusinessAccount(
   gmailAccountId: string,
   gmailEmail: string,
-  data: { name: string; officialDomain?: string; initialFunding?: number }
+  data: { name: string; officialDomain?: string; initialFunding?: number; createdAt?: number }
 ) {
   const existing = await getDocs(query(businessCol, where("gmailAccountId", "==", gmailAccountId)));
   if (existing.size >= MAX_BUSINESS_PER_GMAIL) {
@@ -125,7 +126,7 @@ export async function createBusinessAccount(
     amountLost: 0,
     dateFunded: now,
     status: "active",
-    createdAt: now,
+    createdAt: data.createdAt ?? now,
     updatedAt: now,
   });
 
@@ -148,7 +149,7 @@ export async function createBusinessAccount(
 
 export async function updateBusinessAccount(
   id: string,
-  data: Partial<Pick<BusinessAccount, "name" | "officialDomain">>
+  data: Partial<Pick<BusinessAccount, "name" | "officialDomain" | "createdAt">>
 ) {
   await updateDoc(doc(businessCol, id), { ...data, updatedAt: Date.now() });
 }
@@ -239,7 +240,7 @@ export async function deleteBusinessAccount(id: string) {
 export async function createAdsAccount(
   businessAccountId: string,
   gmailAccountId: string,
-  data: { name: string; destinationUrl?: string }
+  data: { name: string; destinationUrl?: string; createdAt?: number }
 ) {
   const existing = await getDocs(query(adsCol, where("businessAccountId", "==", businessAccountId)));
   if (existing.size >= MAX_ADS_PER_BUSINESS) {
@@ -256,14 +257,14 @@ export async function createAdsAccount(
     cpa: 0,
     status: "active" as AdsStatus,
     adStatus: "not_created" as AdCreationStatus,
-    createdAt: now,
+    createdAt: data.createdAt ?? now,
     updatedAt: now,
   });
 }
 
 export async function updateAdsAccount(
   id: string,
-  data: Partial<Pick<AdsAccount, "name" | "destinationUrl" | "adStatus" | "cpa">>
+  data: Partial<Pick<AdsAccount, "name" | "destinationUrl" | "adStatus" | "cpa" | "createdAt">>
 ) {
   await updateDoc(doc(adsCol, id), { ...data, updatedAt: Date.now() });
 }
