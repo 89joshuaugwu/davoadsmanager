@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
-import { ArrowDownCircle, PiggyBank, TrendingDown, Wallet } from "lucide-react";
+import { ArrowDownCircle, PiggyBank, TrendingDown, Wallet, Receipt } from "lucide-react";
 import { useEffect, useState } from "react";
 import { formatCurrency } from "@/lib/utils";
 import type { FinancialSummary as Summary } from "@/types";
@@ -43,6 +43,12 @@ const CARDS = [
     tint: "bg-danger-soft text-danger",
   },
   {
+    key: "totalCharges" as const,
+    label: "Total Charges",
+    icon: Receipt,
+    tint: "bg-warning-soft text-warning",
+  },
+  {
     key: "remainingBalance" as const,
     label: "Remaining Active Balance",
     icon: PiggyBank,
@@ -52,7 +58,7 @@ const CARDS = [
 
 export function FinancialSummary({ summary }: { summary: Summary }) {
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-5 lg:gap-4">
       {CARDS.map((card, i) => {
         const Icon = card.icon;
         return (

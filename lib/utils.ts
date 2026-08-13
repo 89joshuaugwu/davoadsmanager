@@ -85,10 +85,12 @@ export function computeSummary(
   const totalFunded = businessAccounts.reduce((sum, b) => sum + b.amountFunded, 0);
   const totalSpent = adsAccounts.reduce((sum, a) => sum + a.amountSpent, 0);
   const totalLost = businessAccounts.reduce((sum, b) => sum + b.amountLost, 0);
+  const totalCharges = businessAccounts.reduce((sum, b) => sum + (b.totalCharges || 0), 0);
   return {
     totalFunded,
     totalSpent,
     totalLost,
+    totalCharges,
     remainingBalance: totalFunded - totalSpent - totalLost,
   };
 }

@@ -124,6 +124,7 @@ export async function createBusinessAccount(
     officialDomain: data.officialDomain ?? "",
     amountFunded: funding,
     amountLost: 0,
+    totalCharges: 0,
     dateFunded: now,
     status: "active",
     createdAt: data.createdAt ?? now,
@@ -155,11 +156,12 @@ export async function updateBusinessAccount(
 }
 
 export async function addFundingToBusinessAccount(
-  business: Pick<BusinessAccount, "id" | "amountFunded" | "gmailAccountId" | "name">,
+  business: Pick<BusinessAccount, "id" | "amountFunded" | "totalCharges" | "gmailAccountId" | "name">,
   gmailEmail: string,
   amount: number,
   note?: string,
-  card?: Pick<Card, "id" | "name" | "lastFourDigits">
+  card?: Pick<Card, "id" | "name" | "lastFourDigits">,
+  charge?: number
 ) {
   if (amount <= 0) throw new Error("Funding amount must be greater than zero.");
   const now = Date.now();
@@ -167,11 +169,13 @@ export async function addFundingToBusinessAccount(
   const batch = writeBatch(db);
   batch.update(doc(businessCol, business.id), {
     amountFunded: business.amountFunded + amount,
+    totalCharges: (business.totalCharges || 0) + (charge ?? 0),
     updatedAt: now,
   });
   batch.set(doc(txCol), {
     type: "funding",
     amount,
+    charge: charge ?? 0,
     date: now,
     gmailAccountId: business.gmailAccountId,
     gmailEmail,

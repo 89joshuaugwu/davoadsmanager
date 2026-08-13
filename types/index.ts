@@ -29,6 +29,7 @@ export interface BusinessAccount {
   officialDomain?: string;
   amountFunded: number;
   amountLost: number;
+  totalCharges: number;
   dateFunded: number;
   status: BusinessStatus;
   createdAt: number;
@@ -54,6 +55,7 @@ export interface Transaction {
   id: string;
   type: TransactionType;
   amount: number;
+  charge?: number;
   date: number;
   gmailAccountId: string;
   gmailEmail: string;
@@ -104,6 +106,7 @@ export interface FinancialSummary {
   totalFunded: number;
   totalSpent: number;
   totalLost: number;
+  totalCharges: number;
   remainingBalance: number;
 }
 

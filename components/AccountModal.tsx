@@ -129,7 +129,8 @@ export function AccountModal({
             mode.gmailEmail,
             Number(form.get("amount") ?? 0),
             String(form.get("note") ?? "").trim(),
-            card ? { id: card.id, name: card.name, lastFourDigits: card.lastFourDigits } : undefined
+            card ? { id: card.id, name: card.name, lastFourDigits: card.lastFourDigits } : undefined,
+            Number(form.get("charge") ?? 0)
           );
           break;
         }
@@ -313,6 +314,9 @@ function ModalFields({ mode, cards }: { mode: ModalMode; cards: Card[] }) {
           </p>
           <Field label="Amount">
             <input name="amount" type="number" min={0.01} step="0.01" required autoFocus className={inputClass} />
+          </Field>
+          <Field label="Charge/Fee (optional)">
+            <input name="charge" type="number" min={0} step="0.01" defaultValue={0} className={inputClass} />
           </Field>
           <Field label="Card used (optional)">
             <select name="cardId" defaultValue="" className={inputClass}>
