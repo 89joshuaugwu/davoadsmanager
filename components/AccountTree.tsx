@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BarChart3,
   ChevronDown,
   Globe,
   Mail,
@@ -11,6 +12,7 @@ import {
   Trash2,
   XCircle,
 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { PasswordReveal } from "@/components/PasswordReveal";
 import { HighCpaBadge, StatusBadge } from "@/components/StatusBadge";
@@ -34,7 +36,7 @@ export interface TreeCallbacks {
   onAddAds: (businessId: string, gmailId: string) => void;
   onEditAds: (a: AdsAccountNode) => void;
   onDeleteAds: (a: AdsAccountNode) => void;
-  onUpdateSpend: (a: AdsAccountNode, businessName: string, gmailEmail: string) => void;
+  onLogSpend: (a: AdsAccountNode, businessName: string, gmailEmail: string) => void;
   onUpdateAdsStatus: (a: AdsAccountNode, status: AdsStatus) => void;
 }
 
@@ -94,6 +96,9 @@ function GmailNode({ gmail, callbacks }: { gmail: GmailAccountNode; callbacks: T
 
         <div className="flex w-full flex-wrap items-center gap-1.5 sm:w-auto sm:justify-end">
           <PasswordReveal encryptedPassword={gmail.encryptedPassword} />
+          <IconLink href={`/analysis/ads?gmailAccountId=${gmail.id}`} label="View ads analysis for this Gmail">
+            <BarChart3 size={15} />
+          </IconLink>
           <IconButton onClick={() => callbacks.onEditGmail(gmail)} label="Edit Gmail account">
             <Pencil size={15} />
           </IconButton>
@@ -169,6 +174,9 @@ function BusinessNode({
         </button>
 
         <div className="flex w-full flex-wrap items-center gap-1.5 sm:w-auto sm:justify-end">
+          <IconLink href={`/analysis/ads?businessAccountId=${business.id}`} label="View ads analysis for this business account">
+            <BarChart3 size={15} />
+          </IconLink>
           {business.status === "active" && (
             <>
               <IconButton onClick={() => callbacks.onAddFunding(business, gmailEmail)} label="Add funding">
@@ -259,11 +267,14 @@ function AdsRow({
 
       <div className="flex w-full flex-wrap items-center gap-1.5 sm:w-auto sm:justify-end">
         <button
-          onClick={() => callbacks.onUpdateSpend(ads, businessName, gmailEmail)}
+          onClick={() => callbacks.onLogSpend(ads, businessName, gmailEmail)}
           className="rounded-full border border-line px-3 py-1.5 text-xs font-semibold text-ink transition hover:border-primary hover:text-primary"
         >
-          Update spend
+          Log spend
         </button>
+        <IconLink href={`/analysis/ads?adsAccountId=${ads.id}`} label="View analysis for this ads account">
+          <BarChart3 size={14} />
+        </IconLink>
         <IconButton onClick={() => callbacks.onEditAds(ads)} label="Edit ads account">
           <Pencil size={14} />
         </IconButton>
@@ -316,5 +327,26 @@ function IconButton({
     >
       {children}
     </button>
+  );
+}
+
+function IconLink({
+  children,
+  href,
+  label,
+}: {
+  children: React.ReactNode;
+  href: string;
+  label: string;
+}) {
+  return (
+    <Link
+      href={href}
+      title={label}
+      aria-label={label}
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-ink-soft transition hover:bg-primary-soft hover:text-primary"
+    >
+      {children}
+    </Link>
   );
 }

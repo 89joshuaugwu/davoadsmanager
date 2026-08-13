@@ -91,3 +91,63 @@ export function computeSummary(
 export function cn(...classes: Array<string | false | null | undefined>): string {
   return classes.filter(Boolean).join(" ");
 }
+
+/** Normalizes a timestamp to local midnight, so entries logged at different
+ *  times on the same day still group onto one point on a chart. */
+export function dayKey(ms: number): number {
+  const d = new Date(ms);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
+export function shortDate(ms: number): string {
+  return new Intl.DateTimeFormat("en-NG", { month: "short", day: "2-digit" }).format(new Date(ms));
+}
+
+export interface DailyPoint {
+  date: number;
+  label: string;
+  spend: number;
+  avgCpa: number;
+}
+
+/** One point per calendar day: total spend that day, average CPA across
+ *  whatever accounts had an entry that day. */
+export function aggregateEntriesByDate(entries: Array<{ date: number; spend: number; cpa: number }>): DailyPoint[] {
+  const map = new Map<number, { spend: number; cpaSum: number; count: number }>();
+  for (const e of entries) {
+    const key = dayKey(e.date);
+    const existing = map.get(key) ?? { spend: 0, cpaSum: 0, count: 0 };
+    existing.spend += e.spend;
+    existing.cpaSum += e.cpa;
+    existing.count += 1;
+    map.set(key, existing);
+  }
+  return Array.from(map.entries())
+    .sort(([a], [b]) => a - b)
+    .map(([date, v]) => ({
+      date,
+      label: shortDate(date),
+      spend: v.spend,
+      avgCpa: v.count ? v.cpaSum / v.count : 0,
+    }));
+}
+
+export interface AccountSpendPoint {
+  id: string;
+  name: string;
+  spend: number;
+}
+
+/** Total spend per ads account within whatever entries were passed in. */
+export function aggregateEntriesByAccount(
+  entries: Array<{ adsAccountId: string; adsName: string; spend: number }>
+): AccountSpendPoint[] {
+  const map = new Map<string, AccountSpendPoint>();
+  for (const e of entries) {
+    const existing = map.get(e.adsAccountId) ?? { id: e.adsAccountId, name: e.adsName, spend: 0 };
+    existing.spend += e.spend;
+    map.set(e.adsAccountId, existing);
+  }
+  return Array.from(map.values()).sort((a, b) => b.spend - a.spend);
+}

@@ -4,7 +4,7 @@ import { ArrowDownCircle, Loader2, Printer, TrendingDown, Wallet } from "lucide-
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { DateRangeFilter, presetToRange, type DateRange } from "@/components/DateRangeFilter";
-import { Navbar } from "@/components/Navbar";
+import { AppShell } from "@/components/AppShell";
 import { LogoMark } from "@/components/Logo";
 import { useAuth } from "@/context/AuthContext";
 import { getTransactionsInRange } from "@/lib/firestore-helpers";
@@ -57,9 +57,7 @@ export default function ReportsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-canvas pb-16">
-      <Navbar />
-
+    <AppShell>
       <div className="mx-auto max-w-6xl space-y-5 px-4 py-6">
         <div className="no-print flex flex-wrap items-center justify-between gap-3">
           <h1 className="font-display text-xl font-bold text-ink">Reports</h1>
@@ -173,7 +171,7 @@ export default function ReportsPage() {
           </div>
         )}
       </div>
-    </main>
+    </AppShell>
   );
 }
 

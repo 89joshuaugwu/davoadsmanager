@@ -6,9 +6,9 @@ import { useEffect, useMemo, useState } from "react";
 import { AccountCards } from "@/components/AccountCards";
 import { AccountModal, type ModalMode } from "@/components/AccountModal";
 import { AccountTree, type TreeCallbacks } from "@/components/AccountTree";
+import { AppShell } from "@/components/AppShell";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { FinancialSummary } from "@/components/FinancialSummary";
-import { Navbar } from "@/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
 import {
   deleteAdsAccount,
@@ -17,11 +17,12 @@ import {
   closeBusinessAccount,
   subscribeAdsAccounts,
   subscribeBusinessAccounts,
+  subscribeCards,
   subscribeGmailAccounts,
   updateAdsAccountStatus,
 } from "@/lib/firestore-helpers";
 import { buildAccountTree, cn, computeSummary } from "@/lib/utils";
-import type { AdsAccount, AdsStatus, BusinessAccount, GmailAccount } from "@/types";
+import type { AdsAccount, AdsStatus, BusinessAccount, Card, GmailAccount } from "@/types";
 
 type ViewMode = "tree" | "cards";
 type PendingAction =
@@ -37,6 +38,7 @@ export default function DashboardPage() {
   const [gmailAccounts, setGmailAccounts] = useState<GmailAccount[]>([]);
   const [businessAccounts, setBusinessAccounts] = useState<BusinessAccount[]>([]);
   const [adsAccounts, setAdsAccounts] = useState<AdsAccount[]>([]);
+  const [cards, setCards] = useState<Card[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
   const [view, setView] = useState<ViewMode>("tree");
@@ -52,7 +54,7 @@ export default function DashboardPage() {
     let loaded = 0;
     const markLoaded = () => {
       loaded += 1;
-      if (loaded >= 3) setDataLoading(false);
+      if (loaded >= 4) setDataLoading(false);
     };
     const unsub1 = subscribeGmailAccounts((rows) => {
       setGmailAccounts(rows);
@@ -66,10 +68,15 @@ export default function DashboardPage() {
       setAdsAccounts(rows);
       markLoaded();
     });
+    const unsub4 = subscribeCards((rows) => {
+      setCards(rows);
+      markLoaded();
+    });
     return () => {
       unsub1();
       unsub2();
       unsub3();
+      unsub4();
     };
   }, [user]);
 
@@ -96,8 +103,8 @@ export default function DashboardPage() {
       setModalMode({ kind: "add-ads", businessAccountId, gmailAccountId }),
     onEditAds: (a) => setModalMode({ kind: "edit-ads", ads: a }),
     onDeleteAds: (a) => setPendingAction({ kind: "delete-ads", ads: a }),
-    onUpdateSpend: (a, businessName, gmailEmail) =>
-      setModalMode({ kind: "update-spend", ads: a, businessName, gmailEmail }),
+    onLogSpend: (a, businessName, gmailEmail) =>
+      setModalMode({ kind: "add-daily-entry", ads: a, businessName, gmailEmail }),
     onUpdateAdsStatus: (a, status: AdsStatus) =>
       updateAdsAccountStatus(a.id, status, status === "paused" ? "Paused — high CPA" : "Blocked"),
   };
@@ -130,9 +137,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-canvas pb-16">
-      <Navbar />
-
+    <AppShell>
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-6">
         <FinancialSummary summary={summary} />
 
@@ -161,7 +166,7 @@ export default function DashboardPage() {
         )}
       </div>
 
-      <AccountModal mode={modalMode} onClose={() => setModalMode(null)} />
+      <AccountModal mode={modalMode} cards={cards} onClose={() => setModalMode(null)} />
 
       <ConfirmDialog
         open={pendingAction !== null}
@@ -171,7 +176,7 @@ export default function DashboardPage() {
         onConfirm={confirmPendingAction}
         onCancel={() => setPendingAction(null)}
       />
-    </main>
+    </AppShell>
   );
 }
 

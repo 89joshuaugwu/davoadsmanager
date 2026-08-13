@@ -32,6 +32,14 @@ service cloud.firestore {
       allow read, write: if isWhitelisted();
     }
 
+    match /dailyEntries/{docId} {
+      allow read, write: if isWhitelisted();
+    }
+
+    match /cards/{docId} {
+      allow read, write: if isWhitelisted();
+    }
+
     match /transactions/{docId} {
       allow read, write: if isWhitelisted();
     }

@@ -61,8 +61,43 @@ export interface Transaction {
   businessName?: string;
   adsAccountId?: string;
   adsName?: string;
+  cardId?: string;
+  cardLabel?: string;
   note?: string;
   createdAt: number;
+}
+
+/** One day's spend + cost-per-result for one ads account. Source of truth for
+ *  the running totals cached on AdsAccount, and for the analysis charts. */
+export interface DailyEntry {
+  id: string;
+  adsAccountId: string;
+  adsName: string;
+  businessAccountId: string;
+  businessName: string;
+  gmailAccountId: string;
+  gmailEmail: string;
+  date: number;
+  spend: number;
+  cpa: number;
+  note?: string;
+  createdAt: number;
+}
+
+export type CardStatus = "active" | "inactive";
+
+/** A funding card. Not every business account is funded through a tracked
+ *  card — a card can also sit unlinked until it's assigned to one. */
+export interface Card {
+  id: string;
+  name: string;
+  lastFourDigits: string;
+  businessAccountId?: string;
+  businessName?: string;
+  status: CardStatus;
+  notes?: string;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface FinancialSummary {

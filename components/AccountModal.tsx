@@ -4,17 +4,17 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Loader2, X } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import {
+  addDailyEntry,
   addFundingToBusinessAccount,
   createAdsAccount,
   createBusinessAccount,
   createGmailAccount,
   updateAdsAccount,
-  updateAdsAccountSpend,
   updateBusinessAccount,
   updateGmailAccount,
 } from "@/lib/firestore-helpers";
 import { encryptPassword } from "@/lib/vault";
-import type { AdsAccount, BusinessAccount, GmailAccount } from "@/types";
+import type { AdsAccount, BusinessAccount, Card, GmailAccount } from "@/types";
 
 export type ModalMode =
   | { kind: "add-gmail" }
@@ -24,7 +24,7 @@ export type ModalMode =
   | { kind: "add-funding"; business: BusinessAccount; gmailEmail: string }
   | { kind: "add-ads"; businessAccountId: string; gmailAccountId: string }
   | { kind: "edit-ads"; ads: AdsAccount }
-  | { kind: "update-spend"; ads: AdsAccount; businessName: string; gmailEmail: string };
+  | { kind: "add-daily-entry"; ads: AdsAccount; businessName: string; gmailEmail: string };
 
 const TITLES: Record<ModalMode["kind"], string> = {
   "add-gmail": "Add Gmail Account",
@@ -34,10 +34,23 @@ const TITLES: Record<ModalMode["kind"], string> = {
   "add-funding": "Add Funding",
   "add-ads": "Add Ads Account",
   "edit-ads": "Edit Ads Account",
-  "update-spend": "Update Amount Spent",
+  "add-daily-entry": "Log Daily Spend",
 };
 
-export function AccountModal({ mode, onClose }: { mode: ModalMode | null; onClose: () => void }) {
+function todayInputDate(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+export function AccountModal({
+  mode,
+  cards,
+  onClose,
+}: {
+  mode: ModalMode | null;
+  cards: Card[];
+  onClose: () => void;
+}) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -92,11 +105,14 @@ export function AccountModal({ mode, onClose }: { mode: ModalMode | null; onClos
           break;
         }
         case "add-funding": {
+          const cardId = String(form.get("cardId") ?? "");
+          const card = cards.find((c) => c.id === cardId);
           await addFundingToBusinessAccount(
             mode.business,
             mode.gmailEmail,
             Number(form.get("amount") ?? 0),
-            String(form.get("note") ?? "").trim()
+            String(form.get("note") ?? "").trim(),
+            card ? { id: card.id, name: card.name, lastFourDigits: card.lastFourDigits } : undefined
           );
           break;
         }
@@ -112,16 +128,21 @@ export function AccountModal({ mode, onClose }: { mode: ModalMode | null; onClos
             name: String(form.get("name") ?? "").trim(),
             destinationUrl: String(form.get("destinationUrl") ?? "").trim(),
             adStatus: form.get("adStatus") === "created" ? "created" : "not_created",
-            cpa: Number(form.get("cpa") ?? 0),
           });
           break;
         }
-        case "update-spend": {
-          await updateAdsAccountSpend(
+        case "add-daily-entry": {
+          const dateStr = String(form.get("date") ?? "");
+          await addDailyEntry(
             mode.ads,
             { name: mode.businessName },
             mode.gmailEmail,
-            Number(form.get("amountSpent") ?? 0)
+            {
+              date: new Date(dateStr + "T12:00:00").getTime(),
+              spend: Number(form.get("spend") ?? 0),
+              cpa: Number(form.get("cpa") ?? 0),
+              note: String(form.get("note") ?? "").trim(),
+            }
           );
           break;
         }
@@ -163,7 +184,7 @@ export function AccountModal({ mode, onClose }: { mode: ModalMode | null; onClos
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <ModalFields mode={mode} />
+              <ModalFields mode={mode} cards={cards} />
 
               {error && <p className="text-sm text-danger">{error}</p>}
 
@@ -203,7 +224,7 @@ function Field({
 const inputClass =
   "w-full rounded-xl border border-line px-3.5 py-2.5 text-sm text-ink outline-none transition focus:border-primary";
 
-function ModalFields({ mode }: { mode: ModalMode }) {
+function ModalFields({ mode, cards }: { mode: ModalMode; cards: Card[] }) {
   switch (mode.kind) {
     case "add-gmail":
     case "edit-gmail": {
@@ -255,7 +276,8 @@ function ModalFields({ mode }: { mode: ModalMode }) {
       );
     }
 
-    case "add-funding":
+    case "add-funding": {
+      const linkedCards = cards.filter((c) => c.businessAccountId === mode.business.id && c.status === "active");
       return (
         <>
           <p className="text-sm text-ink-soft">
@@ -264,11 +286,27 @@ function ModalFields({ mode }: { mode: ModalMode }) {
           <Field label="Amount">
             <input name="amount" type="number" min={0.01} step="0.01" required autoFocus className={inputClass} />
           </Field>
+          <Field label="Card used (optional)">
+            <select name="cardId" defaultValue="" className={inputClass}>
+              <option value="">No card / other method</option>
+              {linkedCards.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} •••• {c.lastFourDigits}
+                </option>
+              ))}
+            </select>
+            {linkedCards.length === 0 && (
+              <p className="mt-1.5 text-xs text-ink-soft">
+                No cards linked to this business account yet — manage cards from the sidebar.
+              </p>
+            )}
+          </Field>
           <Field label="Note (optional)">
             <input name="note" className={inputClass} placeholder="e.g. Top-up via bank transfer" />
           </Field>
         </>
       );
+    }
 
     case "add-ads":
     case "edit-ads": {
@@ -282,40 +320,35 @@ function ModalFields({ mode }: { mode: ModalMode }) {
             <input name="destinationUrl" defaultValue={a?.destinationUrl} className={inputClass} />
           </Field>
           {a && (
-            <>
-              <Field label="Cost per conversion (CPA)">
-                <input name="cpa" type="number" min={0} step="0.01" defaultValue={a.cpa} className={inputClass} />
-              </Field>
-              <Field label="Ad creation status">
-                <select name="adStatus" defaultValue={a.adStatus} className={inputClass}>
-                  <option value="not_created">Not created</option>
-                  <option value="created">Created</option>
-                </select>
-              </Field>
-            </>
+            <Field label="Ad creation status">
+              <select name="adStatus" defaultValue={a.adStatus} className={inputClass}>
+                <option value="not_created">Not created</option>
+                <option value="created">Created</option>
+              </select>
+            </Field>
           )}
         </>
       );
     }
 
-    case "update-spend":
+    case "add-daily-entry":
       return (
         <>
           <p className="text-sm text-ink-soft">
-            Current spend on <span className="font-semibold text-ink">{mode.ads.name}</span>:{" "}
-            <span className="font-semibold text-ink">₦{mode.ads.amountSpent.toLocaleString()}</span>
+            Logging a day for <span className="font-semibold text-ink">{mode.ads.name}</span> · running
+            total so far: <span className="font-semibold text-ink">₦{mode.ads.amountSpent.toLocaleString()}</span>
           </p>
-          <Field label="New total amount spent">
-            <input
-              name="amountSpent"
-              type="number"
-              min={0}
-              step="0.01"
-              required
-              autoFocus
-              defaultValue={mode.ads.amountSpent}
-              className={inputClass}
-            />
+          <Field label="Date">
+            <input name="date" type="date" required defaultValue={todayInputDate()} max={todayInputDate()} className={inputClass} />
+          </Field>
+          <Field label="Amount spent that day">
+            <input name="spend" type="number" min={0} step="0.01" required autoFocus defaultValue={0} className={inputClass} />
+          </Field>
+          <Field label="Cost per result (CPA) that day">
+            <input name="cpa" type="number" min={0} step="0.01" required defaultValue={mode.ads.cpa} className={inputClass} />
+          </Field>
+          <Field label="Note (optional)">
+            <input name="note" className={inputClass} placeholder="e.g. Creative refreshed" />
           </Field>
         </>
       );

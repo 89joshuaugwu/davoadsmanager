@@ -153,10 +153,10 @@ function BusinessMiniCard({
               <div className="flex items-center gap-1.5">
                 {isHighCpa(a) && <HighCpaBadge />}
                 <button
-                  onClick={() => callbacks.onUpdateSpend(a, business.name, gmailEmail)}
+                  onClick={() => callbacks.onLogSpend(a, business.name, gmailEmail)}
                   className="rounded-full border border-line px-2.5 py-1.5 text-[11px] font-semibold text-ink transition hover:border-primary hover:text-primary"
                 >
-                  Update spend
+                  Log spend
                 </button>
               </div>
             </div>
