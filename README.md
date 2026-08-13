@@ -197,3 +197,5 @@ firestore.indexes.json Composite index for dailyEntries — see Setup #3
 ### Firestore collections
 `gmailAccounts`, `businessAccounts`, `adsAccounts`, `dailyEntries`, `transactions` (the ledger
 behind Reports and Business Analysis — funding/spend/loss events), `cards`, `whitelistedUsers`.
+#   d a v o a d s m a n a g e r  
+ 
