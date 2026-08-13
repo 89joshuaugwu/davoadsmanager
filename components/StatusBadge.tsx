@@ -33,11 +33,20 @@ export function StatusBadge({ status }: { status: Status }) {
   );
 }
 
+export function ElevatedCpaBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-warning px-2.5 py-1 text-xs font-semibold text-white">
+      <AlertTriangle size={12} strokeWidth={2.5} />
+      ELEVATED CPR
+    </span>
+  );
+}
+
 export function HighCpaBadge() {
   return (
     <span className="animate-flag-pulse inline-flex items-center gap-1 rounded-full bg-danger px-2.5 py-1 text-xs font-semibold text-white">
       <AlertTriangle size={12} strokeWidth={2.5} />
-      HIGH CPA — PAUSE
+      HIGH CPR — PAUSE
     </span>
   );
 }

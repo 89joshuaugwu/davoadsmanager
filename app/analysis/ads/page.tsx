@@ -26,6 +26,7 @@ import {
   subscribeGmailAccounts,
 } from "@/lib/firestore-helpers";
 import {
+  CPA_HIGH_THRESHOLD,
   CPA_THRESHOLD,
   aggregateEntriesByAccount,
   aggregateEntriesByDate,
@@ -136,7 +137,7 @@ function AdsAnalysisContent() {
     const avgCpa = filteredEntries.length
       ? filteredEntries.reduce((s, e) => s + e.cpa, 0) / filteredEntries.length
       : 0;
-    const flaggedDays = filteredEntries.filter((e) => e.cpa > CPA_THRESHOLD).length;
+    const flaggedDays = filteredEntries.filter((e) => e.cpa > CPA_HIGH_THRESHOLD).length;
     return { spend, avgCpa, flaggedDays, entryCount: filteredEntries.length };
   }, [filteredEntries]);
 
@@ -193,7 +194,7 @@ function AdsAnalysisContent() {
         <div className="hidden print:block">
           <p className="font-display text-base font-bold text-ink">DavoPay Ads Manager — Ads Analysis</p>
           <p className="mt-1 text-sm text-ink-soft">
-            {formatCurrency(totals.spend)} spent · avg CPA {formatCurrency(totals.avgCpa)}
+            {formatCurrency(totals.spend)} spent · avg CPR {formatCurrency(totals.avgCpa)}
           </p>
         </div>
 
@@ -212,8 +213,8 @@ function AdsAnalysisContent() {
           <>
             <div className="print-area grid grid-cols-2 gap-3 lg:grid-cols-4">
               <StatCard icon={DollarSign} label="Total Spend" value={formatCurrency(totals.spend)} tone="text-primary" />
-              <StatCard icon={TrendingUp} label="Average CPA" value={formatCurrency(totals.avgCpa)} tone="text-navy" />
-              <StatCard icon={AlertTriangle} label="High-CPA Entries" value={String(totals.flaggedDays)} tone="text-danger" />
+              <StatCard icon={TrendingUp} label="Average CPR" value={formatCurrency(totals.avgCpa)} tone="text-navy" />
+              <StatCard icon={AlertTriangle} label="High-CPR Entries" value={String(totals.flaggedDays)} tone="text-danger" />
               <StatCard icon={DollarSign} label="Entries Logged" value={String(totals.entryCount)} tone="text-success" />
             </div>
 
@@ -229,14 +230,14 @@ function AdsAnalysisContent() {
               </ResponsiveContainer>
             </ChartCard>
 
-            <ChartCard title="Cost per result (CPA) over time" subtitle={`Red line = your ${formatCurrency(CPA_THRESHOLD)} pause threshold`}>
+            <ChartCard title="Cost per result (CPR) over time" subtitle={`Red line = your ${formatCurrency(CPA_HIGH_THRESHOLD)} pause threshold`}>
               <ResponsiveContainer width="100%" height={260}>
                 <LineChart data={dateSeries} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e3e8f2" />
                   <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#56617A" }} />
                   <YAxis tick={{ fontSize: 11, fill: "#56617A" }} width={70} tickFormatter={(v) => `₦${v}`} />
                   <Tooltip formatter={(v: unknown) => formatCurrency(Number(v) || 0)} />
-                  <ReferenceLine y={CPA_THRESHOLD} stroke="#dc2626" strokeDasharray="4 4" />
+                  <ReferenceLine y={CPA_HIGH_THRESHOLD} stroke="#dc2626" strokeDasharray="4 4" />
                   <Line type="monotone" dataKey="avgCpa" stroke="#173b8c" strokeWidth={2.5} dot={false} />
                 </LineChart>
               </ResponsiveContainer>

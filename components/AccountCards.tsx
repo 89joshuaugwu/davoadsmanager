@@ -3,13 +3,13 @@
 import { ChevronDown, Mail, Plus } from "lucide-react";
 import { useState } from "react";
 import { PasswordReveal } from "@/components/PasswordReveal";
-import { StatusBadge, HighCpaBadge } from "@/components/StatusBadge";
+import { StatusBadge, HighCpaBadge, ElevatedCpaBadge } from "@/components/StatusBadge";
 import type { TreeCallbacks } from "@/components/AccountTree";
 import {
   MAX_ADS_PER_BUSINESS,
   MAX_BUSINESS_PER_GMAIL,
   formatCurrency,
-  isHighCpa,
+  getCpaAlertLevel,
 } from "@/lib/utils";
 import type { GmailAccountNode } from "@/types";
 
@@ -46,7 +46,7 @@ function GmailCard({ gmail, callbacks }: { gmail: GmailAccountNode; callbacks: T
     0
   );
   const lost = gmail.businessAccounts.reduce((s, b) => s + b.amountLost, 0);
-  const anyFlagged = gmail.businessAccounts.some((b) => b.adsAccounts.some((a) => isHighCpa(a)));
+  const anyFlagged = gmail.businessAccounts.some((b) => b.adsAccounts.some((a) => getCpaAlertLevel(a) !== "normal"));
 
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-line bg-white">
@@ -147,11 +147,12 @@ function BusinessMiniCard({
               <div className="min-w-0">
                 <p className="truncate text-xs font-semibold text-ink">{a.name}</p>
                 <p className="text-[11px] text-ink-soft">
-                  {formatCurrency(a.amountSpent)} spent · CPA {formatCurrency(a.cpa)}
+                  {formatCurrency(a.amountSpent)} spent · CPR {formatCurrency(a.cpa)}
                 </p>
               </div>
               <div className="flex items-center gap-1.5">
-                {isHighCpa(a) && <HighCpaBadge />}
+                {getCpaAlertLevel(a) === "high" && <HighCpaBadge />}
+                {getCpaAlertLevel(a) === "elevated" && <ElevatedCpaBadge />}
                 <button
                   onClick={() => callbacks.onLogSpend(a, business.name, gmailEmail)}
                   className="rounded-full border border-line px-2.5 py-1.5 text-[11px] font-semibold text-ink transition hover:border-primary hover:text-primary"

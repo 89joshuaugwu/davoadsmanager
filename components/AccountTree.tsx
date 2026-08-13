@@ -15,13 +15,13 @@ import {
 import Link from "next/link";
 import { useState } from "react";
 import { PasswordReveal } from "@/components/PasswordReveal";
-import { HighCpaBadge, StatusBadge } from "@/components/StatusBadge";
+import { ElevatedCpaBadge, HighCpaBadge, StatusBadge } from "@/components/StatusBadge";
 import {
   MAX_ADS_PER_BUSINESS,
   MAX_BUSINESS_PER_GMAIL,
   formatCurrency,
   formatDate,
-  isHighCpa,
+  getCpaAlertLevel,
 } from "@/lib/utils";
 import type { AdsAccountNode, AdsStatus, BusinessAccountNode, GmailAccountNode } from "@/types";
 
@@ -238,12 +238,12 @@ function AdsRow({
   gmailEmail: string;
   callbacks: TreeCallbacks;
 }) {
-  const flagged = isHighCpa(ads);
+  const alertLevel = getCpaAlertLevel(ads);
 
   return (
     <div
       className={`flex flex-wrap items-center justify-between gap-2.5 rounded-lg border p-2.5 sm:gap-3 sm:p-3 ${
-        flagged ? "border-danger/40 bg-danger-soft/40" : "border-line bg-canvas/50"
+        alertLevel !== "normal" ? "border-danger/40 bg-danger-soft/40" : "border-line bg-canvas/50"
       }`}
     >
       <div className="min-w-0 flex-1">
@@ -257,10 +257,11 @@ function AdsRow({
           >
             {ads.adStatus === "created" ? "Ad created" : "Ad not created"}
           </span>
-          {flagged && <HighCpaBadge />}
+          {alertLevel === "high" && <HighCpaBadge />}
+          {alertLevel === "elevated" && <ElevatedCpaBadge />}
         </div>
         <p className="mt-0.5 truncate text-xs text-ink-soft">
-          Spent {formatCurrency(ads.amountSpent)} · CPA {formatCurrency(ads.cpa)}
+          Spent {formatCurrency(ads.amountSpent)} · CPR {formatCurrency(ads.cpa)}
           {ads.invalidationReason ? ` · ${ads.invalidationReason}` : ""}
         </p>
       </div>

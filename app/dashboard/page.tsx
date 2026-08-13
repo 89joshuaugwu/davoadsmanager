@@ -106,7 +106,7 @@ export default function DashboardPage() {
     onLogSpend: (a, businessName, gmailEmail) =>
       setModalMode({ kind: "add-daily-entry", ads: a, businessName, gmailEmail }),
     onUpdateAdsStatus: (a, status: AdsStatus) =>
-      updateAdsAccountStatus(a.id, status, status === "paused" ? "Paused — high CPA" : "Blocked"),
+      updateAdsAccountStatus(a.id, status, status === "paused" ? "Paused — high CPR" : "Blocked"),
   };
 
   async function confirmPendingAction() {

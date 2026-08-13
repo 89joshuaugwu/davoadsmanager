@@ -375,7 +375,7 @@ function ModalFields({ mode, cards }: { mode: ModalMode; cards: Card[] }) {
           <Field label="Amount spent that day">
             <input name="spend" type="number" min={0} step="0.01" required autoFocus defaultValue={0} className={inputClass} />
           </Field>
-          <Field label="Cost per result (CPA) that day">
+          <Field label="Cost per result (CPR) that day">
             <input name="cpa" type="number" min={0} step="0.01" required defaultValue={mode.ads.cpa} className={inputClass} />
           </Field>
           <Field label="Note (optional)">

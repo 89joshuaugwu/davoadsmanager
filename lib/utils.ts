@@ -8,8 +8,10 @@ import type {
   GmailAccountNode,
 } from "@/types";
 
-/** Cost-per-conversion above this triggers the high-CPA visual flag. */
+/** Cost-per-conversion above this triggers the elevated-CPR visual flag. */
 export const CPA_THRESHOLD = 100;
+/** Cost-per-conversion above this triggers the high-CPR visual flag. */
+export const CPA_HIGH_THRESHOLD = 120;
 
 /** Hard caps from the account hierarchy. */
 export const MAX_BUSINESS_PER_GMAIL = 3;
@@ -45,8 +47,11 @@ export function formatDateTime(ms: number): string {
   }).format(new Date(ms));
 }
 
-export function isHighCpa(account: Pick<AdsAccount, "cpa" | "status">): boolean {
-  return account.status === "active" && account.cpa > CPA_THRESHOLD;
+export function getCpaAlertLevel(account: Pick<AdsAccount, "cpa" | "status">): "normal" | "elevated" | "high" {
+  if (account.status !== "active") return "normal";
+  if (account.cpa > CPA_HIGH_THRESHOLD) return "high";
+  if (account.cpa > CPA_THRESHOLD) return "elevated";
+  return "normal";
 }
 
 /** Builds the nested Gmail → Business → Ads tree from three flat collections. */
