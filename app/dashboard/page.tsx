@@ -42,6 +42,7 @@ export default function DashboardPage() {
   const [dataLoading, setDataLoading] = useState(true);
 
   const [view, setView] = useState<ViewMode>("tree");
+  const [adStatusFilter, setAdStatusFilter] = useState<"all" | "created" | "not_created">("all");
   const [modalMode, setModalMode] = useState<ModalMode | null>(null);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
 
@@ -80,10 +81,10 @@ export default function DashboardPage() {
     };
   }, [user]);
 
-  const tree = useMemo(
-    () => buildAccountTree(gmailAccounts, businessAccounts, adsAccounts),
-    [gmailAccounts, businessAccounts, adsAccounts]
-  );
+  const tree = useMemo(() => {
+    const filteredAds = adStatusFilter === "all" ? adsAccounts : adsAccounts.filter((a) => a.adStatus === adStatusFilter);
+    return buildAccountTree(gmailAccounts, businessAccounts, filteredAds);
+  }, [gmailAccounts, businessAccounts, adsAccounts, adStatusFilter]);
   const summary = useMemo(
     () => computeSummary(businessAccounts, adsAccounts),
     [businessAccounts, adsAccounts]
@@ -142,9 +143,21 @@ export default function DashboardPage() {
         <FinancialSummary summary={summary} />
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-1 rounded-full border border-line bg-white p-1">
-            <ViewToggleButton active={view === "tree"} onClick={() => setView("tree")} icon={ListTree} label="Tree" />
-            <ViewToggleButton active={view === "cards"} onClick={() => setView("cards")} icon={LayoutGrid} label="Cards" />
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 rounded-full border border-line bg-white p-1">
+              <ViewToggleButton active={view === "tree"} onClick={() => setView("tree")} icon={ListTree} label="Tree" />
+              <ViewToggleButton active={view === "cards"} onClick={() => setView("cards")} icon={LayoutGrid} label="Cards" />
+            </div>
+
+            <select
+              value={adStatusFilter}
+              onChange={(e) => setAdStatusFilter(e.target.value as "all" | "created" | "not_created")}
+              className="rounded-full border border-line bg-white px-3 py-2 text-sm font-medium text-ink outline-none transition focus:border-primary"
+            >
+              <option value="all">All Ad Statuses</option>
+              <option value="created">Ad created</option>
+              <option value="not_created">Ad not created</option>
+            </select>
           </div>
 
           <button
