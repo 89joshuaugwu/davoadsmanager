@@ -36,3 +36,6 @@ next-env.d.ts
 # firebase
 firebase-debug.log
 .firebase/
+
+
+davoadsmanager-firebase-adminsdk.json
