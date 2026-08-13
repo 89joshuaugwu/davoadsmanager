@@ -150,7 +150,7 @@ export async function createBusinessAccount(
 
 export async function updateBusinessAccount(
   id: string,
-  data: Partial<Pick<BusinessAccount, "name" | "officialDomain" | "createdAt">>
+  data: Partial<Pick<BusinessAccount, "name" | "officialDomain" | "createdAt" | "totalCharges">>
 ) {
   await updateDoc(doc(businessCol, id), { ...data, updatedAt: Date.now() });
 }

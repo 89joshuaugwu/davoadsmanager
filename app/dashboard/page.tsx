@@ -100,8 +100,8 @@ export default function DashboardPage() {
     onAddFunding: (b, gmailEmail) => setModalMode({ kind: "add-funding", business: b, gmailEmail }),
     onCloseBusiness: (b, gmailEmail) =>
       setPendingAction({ kind: "close-business", business: b, gmailEmail }),
-    onAddAds: (businessAccountId, gmailAccountId) =>
-      setModalMode({ kind: "add-ads", businessAccountId, gmailAccountId }),
+    onAddAds: (businessAccountId, gmailAccountId, businessCreatedAt) =>
+      setModalMode({ kind: "add-ads", businessAccountId, gmailAccountId, defaultDate: businessCreatedAt }),
     onEditAds: (a) => setModalMode({ kind: "edit-ads", ads: a }),
     onDeleteAds: (a) => setPendingAction({ kind: "delete-ads", ads: a }),
     onLogSpend: (a, businessName, gmailEmail) =>

@@ -22,7 +22,7 @@ export type ModalMode =
   | { kind: "add-business"; gmailAccountId: string; gmailEmail: string }
   | { kind: "edit-business"; business: BusinessAccount }
   | { kind: "add-funding"; business: BusinessAccount; gmailEmail: string }
-  | { kind: "add-ads"; businessAccountId: string; gmailAccountId: string }
+  | { kind: "add-ads"; businessAccountId: string; gmailAccountId: string; defaultDate?: number }
   | { kind: "edit-ads"; ads: AdsAccount }
   | { kind: "add-daily-entry"; ads: AdsAccount; businessName: string; gmailEmail: string };
 
@@ -116,6 +116,7 @@ export function AccountModal({
           const patch: Parameters<typeof updateBusinessAccount>[1] = {
             name: String(form.get("name") ?? "").trim(),
             officialDomain: String(form.get("officialDomain") ?? "").trim(),
+            totalCharges: Number(form.get("totalCharges") ?? mode.business.totalCharges),
           };
           if (createdAtStr) patch.createdAt = new Date(createdAtStr + "T12:00:00").getTime();
           await updateBusinessAccount(mode.business.id, patch);
@@ -296,6 +297,11 @@ function ModalFields({ mode, cards }: { mode: ModalMode; cards: Card[] }) {
           <Field label="Created Date">
             <input name="createdAt" type="date" required defaultValue={formatInputDate(b?.createdAt)} max={todayInputDate()} className={inputClass} />
           </Field>
+          {b && (
+            <Field label="Total Charges (Manual Edit)">
+              <input name="totalCharges" type="number" min={0} step="0.01" defaultValue={b.totalCharges || 0} className={inputClass} />
+            </Field>
+          )}
           {!b && (
             <Field label="Initial funding (optional)">
               <input name="initialFunding" type="number" min={0} step="0.01" defaultValue={0} className={inputClass} />
@@ -348,11 +354,17 @@ function ModalFields({ mode, cards }: { mode: ModalMode; cards: Card[] }) {
           <Field label="Ads account name">
             <input name="name" required defaultValue={a?.name} className={inputClass} placeholder="e.g. Form1" />
           </Field>
-          <Field label="Destination / bridge URL (optional)">
-            <input name="destinationUrl" defaultValue={a?.destinationUrl} className={inputClass} />
+          <Field label="Destination URL (optional)">
+            <input name="destinationUrl" defaultValue={a?.destinationUrl} className={inputClass} placeholder="https://" />
           </Field>
-          <Field label="Created Date">
-            <input name="createdAt" type="date" required defaultValue={formatInputDate(a?.createdAt)} max={todayInputDate()} className={inputClass} />
+          <Field label="Created Date (optional)">
+            <input 
+              name="createdAt" 
+              type="date" 
+              defaultValue={formatInputDate(a?.createdAt ?? (mode.kind === "add-ads" ? mode.defaultDate : undefined))} 
+              max={todayInputDate()} 
+              className={inputClass} 
+            />
           </Field>
           {a && (
             <Field label="Ad creation status">

@@ -33,7 +33,7 @@ export interface TreeCallbacks {
   onDeleteBusiness: (b: BusinessAccountNode) => void;
   onAddFunding: (b: BusinessAccountNode, gmailEmail: string) => void;
   onCloseBusiness: (b: BusinessAccountNode, gmailEmail: string) => void;
-  onAddAds: (businessId: string, gmailId: string) => void;
+  onAddAds: (businessId: string, gmailId: string, businessCreatedAt: number) => void;
   onEditAds: (a: AdsAccountNode) => void;
   onDeleteAds: (a: AdsAccountNode) => void;
   onLogSpend: (a: AdsAccountNode, businessName: string, gmailEmail: string) => void;
@@ -214,7 +214,7 @@ function BusinessNode({
 
             {adsCount < MAX_ADS_PER_BUSINESS && business.status === "active" && (
               <button
-                onClick={() => callbacks.onAddAds(business.id, business.gmailAccountId)}
+                onClick={() => callbacks.onAddAds(business.id, business.gmailAccountId, business.createdAt)}
                 className="flex items-center gap-1.5 rounded-lg border border-dashed border-line px-2.5 py-1.5 text-xs font-semibold text-primary transition hover:border-primary hover:bg-primary-soft"
               >
                 <Plus size={13} /> Add Ads Account

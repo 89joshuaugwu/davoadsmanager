@@ -164,7 +164,7 @@ function BusinessMiniCard({
           ))}
           {business.adsAccounts.length < MAX_ADS_PER_BUSINESS && business.status === "active" && (
             <button
-              onClick={() => callbacks.onAddAds(business.id, business.gmailAccountId)}
+              onClick={() => callbacks.onAddAds(business.id, business.gmailAccountId, business.createdAt)}
               className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-line py-1.5 text-[11px] font-semibold text-primary transition hover:border-primary hover:bg-primary-soft"
             >
               <Plus size={12} /> Add Ads Account
