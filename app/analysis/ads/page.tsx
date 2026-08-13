@@ -41,6 +41,11 @@ const STATUS_OPTIONS: { id: AdsStatus; label: string }[] = [
   { id: "closed", label: "Closed" },
 ];
 
+const AD_CREATION_OPTIONS = [
+  { id: "created", label: "Ad created" },
+  { id: "not_created", label: "Ad not created" },
+];
+
 export default function AdsAnalysisPage() {
   return (
     <Suspense
@@ -80,6 +85,7 @@ function AdsAnalysisContent() {
     return id ? new Set([id]) : "all";
   });
   const [statusFilter, setStatusFilter] = useState<SelectionState>("all");
+  const [adCreationFilter, setAdCreationFilter] = useState<SelectionState>("all");
 
   function setRange(next: DateRange) {
     setFetching(true);
@@ -109,9 +115,9 @@ function AdsAnalysisContent() {
       .finally(() => setFetching(false));
   }, [user, range.start, range.end]);
 
-  const adsStatusById = useMemo(() => {
-    const map = new Map<string, AdsStatus>();
-    adsAccounts.forEach((a) => map.set(a.id, a.status));
+  const adsDataById = useMemo(() => {
+    const map = new Map<string, { status: AdsStatus; adStatus: "created" | "not_created" }>();
+    adsAccounts.forEach((a) => map.set(a.id, { status: a.status, adStatus: a.adStatus }));
     return map;
   }, [adsAccounts]);
 
@@ -120,11 +126,14 @@ function AdsAnalysisContent() {
       if (!isIncluded(gmailFilter, e.gmailAccountId)) return false;
       if (!isIncluded(businessFilter, e.businessAccountId)) return false;
       if (!isIncluded(adsFilter, e.adsAccountId)) return false;
-      const status = adsStatusById.get(e.adsAccountId);
-      if (status && !isIncluded(statusFilter, status)) return false;
+      const data = adsDataById.get(e.adsAccountId);
+      if (data) {
+        if (!isIncluded(statusFilter, data.status)) return false;
+        if (!isIncluded(adCreationFilter, data.adStatus)) return false;
+      }
       return true;
     });
-  }, [entries, gmailFilter, businessFilter, adsFilter, statusFilter, adsStatusById]);
+  }, [entries, gmailFilter, businessFilter, adsFilter, statusFilter, adCreationFilter, adsDataById]);
 
   const dateSeries = useMemo(() => aggregateEntriesByDate(filteredEntries), [filteredEntries]);
   const accountSeries = useMemo(
@@ -186,6 +195,12 @@ function AdsAnalysisContent() {
             options={STATUS_OPTIONS}
             selected={statusFilter}
             onChange={setStatusFilter}
+          />
+          <MultiSelectFilter
+            label="Ad Created?"
+            options={AD_CREATION_OPTIONS}
+            selected={adCreationFilter}
+            onChange={setAdCreationFilter}
           />
         </div>
 
