@@ -195,7 +195,7 @@ export default function CardsPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
             {sortedCards.map((card, i) => (
               <motion.div
                 key={card.id}
@@ -203,7 +203,7 @@ export default function CardsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(i * 0.04, 0.3), duration: 0.25 }}
                 className={cn(
-                  "relative overflow-hidden rounded-xl bg-navy p-3.5 text-white shadow-sm",
+                  "relative overflow-hidden rounded-2xl bg-navy p-5 text-white shadow-sm",
                   card.status === "inactive" && "opacity-60",
                 )}
               >
