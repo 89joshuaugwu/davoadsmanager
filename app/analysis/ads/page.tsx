@@ -18,6 +18,7 @@ import {
 import { AppShell } from "@/components/AppShell";
 import { DateRangeFilter, presetToRange, type DateRange } from "@/components/DateRangeFilter";
 import { MultiSelectFilter, isIncluded, type SelectionState } from "@/components/MultiSelectFilter";
+import { StatusBadge } from "@/components/StatusBadge";
 import { useAuth } from "@/context/AuthContext";
 import {
   getDailyEntriesInRange,
@@ -141,6 +142,23 @@ function AdsAnalysisContent() {
     [filteredEntries]
   );
 
+  const businessById = useMemo(() => {
+    const map = new Map<string, BusinessAccount>();
+    businessAccounts.forEach((b) => map.set(b.id, b));
+    return map;
+  }, [businessAccounts]);
+
+  const filteredAdsAccounts = useMemo(() => {
+    return adsAccounts.filter((a) => {
+      if (!isIncluded(gmailFilter, a.gmailAccountId)) return false;
+      if (!isIncluded(businessFilter, a.businessAccountId)) return false;
+      if (!isIncluded(adsFilter, a.id)) return false;
+      if (!isIncluded(statusFilter, a.status)) return false;
+      if (!isIncluded(adCreationFilter, a.adStatus)) return false;
+      return true;
+    });
+  }, [adsAccounts, gmailFilter, businessFilter, adsFilter, statusFilter, adCreationFilter]);
+
   const totals = useMemo(() => {
     const spend = filteredEntries.reduce((s, e) => s + e.spend, 0);
     const avgCpa = filteredEntries.length
@@ -217,58 +235,131 @@ function AdsAnalysisContent() {
           <div className="flex justify-center py-16">
             <Loader2 className="animate-spin text-ink-soft" size={22} />
           </div>
-        ) : filteredEntries.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-line bg-white/60 p-10 text-center">
-            <p className="font-display text-base font-semibold text-ink">No daily entries in this range</p>
-            <p className="mt-1 text-sm text-ink-soft">
-              Log spend from the dashboard, or try a wider date range or different filters.
-            </p>
-          </div>
         ) : (
           <>
-            <div className="print-area grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <StatCard icon={DollarSign} label="Total Spend" value={formatCurrency(totals.spend)} tone="text-primary" />
-              <StatCard icon={TrendingUp} label="Average CPR" value={formatCurrency(totals.avgCpa)} tone="text-navy" />
-              <StatCard icon={AlertTriangle} label="High-CPR Entries" value={String(totals.flaggedDays)} tone="text-danger" />
-              <StatCard icon={DollarSign} label="Entries Logged" value={String(totals.entryCount)} tone="text-success" />
-            </div>
+            {filteredEntries.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-line bg-white/60 p-10 text-center">
+                <p className="font-display text-base font-semibold text-ink">No daily entries in this range</p>
+                <p className="mt-1 text-sm text-ink-soft">
+                  Log spend from the dashboard, or try a wider date range or different filters.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="print-area grid grid-cols-2 gap-3 lg:grid-cols-4">
+                  <StatCard icon={DollarSign} label="Total Spend" value={formatCurrency(totals.spend)} tone="text-primary" />
+                  <StatCard icon={TrendingUp} label="Average CPR" value={formatCurrency(totals.avgCpa)} tone="text-navy" />
+                  <StatCard icon={AlertTriangle} label="High-CPR Entries" value={String(totals.flaggedDays)} tone="text-danger" />
+                  <StatCard icon={DollarSign} label="Entries Logged" value={String(totals.entryCount)} tone="text-success" />
+                </div>
 
-            <ChartCard title="Spend over time">
-              <ResponsiveContainer width="100%" height={260}>
-                <LineChart data={dateSeries} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e3e8f2" />
-                  <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#56617A" }} />
-                  <YAxis tick={{ fontSize: 11, fill: "#56617A" }} width={70} tickFormatter={(v) => `₦${v}`} />
-                  <Tooltip formatter={(v: unknown) => formatCurrency(Number(v) || 0)} />
-                  <Line type="monotone" dataKey="spend" stroke="#0051cf" strokeWidth={2.5} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </ChartCard>
+                <ChartCard title="Spend over time">
+                  <ResponsiveContainer width="100%" height={260}>
+                    <LineChart data={dateSeries} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e3e8f2" />
+                      <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#56617A" }} />
+                      <YAxis tick={{ fontSize: 11, fill: "#56617A" }} width={70} tickFormatter={(v) => `₦${v}`} />
+                      <Tooltip formatter={(v: unknown) => formatCurrency(Number(v) || 0)} />
+                      <Line type="monotone" dataKey="spend" stroke="#0051cf" strokeWidth={2.5} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </ChartCard>
 
-            <ChartCard title="Cost per result (CPR) over time" subtitle={`Red line = your ${formatCurrency(CPA_HIGH_THRESHOLD)} pause threshold`}>
-              <ResponsiveContainer width="100%" height={260}>
-                <LineChart data={dateSeries} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e3e8f2" />
-                  <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#56617A" }} />
-                  <YAxis tick={{ fontSize: 11, fill: "#56617A" }} width={70} tickFormatter={(v) => `₦${v}`} />
-                  <Tooltip formatter={(v: unknown) => formatCurrency(Number(v) || 0)} />
-                  <ReferenceLine y={CPA_HIGH_THRESHOLD} stroke="#dc2626" strokeDasharray="4 4" />
-                  <Line type="monotone" dataKey="avgCpa" stroke="#173b8c" strokeWidth={2.5} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </ChartCard>
+                <ChartCard title="Cost per result (CPR) over time" subtitle={`Red line = your ${formatCurrency(CPA_HIGH_THRESHOLD)} pause threshold`}>
+                  <ResponsiveContainer width="100%" height={260}>
+                    <LineChart data={dateSeries} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e3e8f2" />
+                      <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#56617A" }} />
+                      <YAxis tick={{ fontSize: 11, fill: "#56617A" }} width={70} tickFormatter={(v) => `₦${v}`} />
+                      <Tooltip formatter={(v: unknown) => formatCurrency(Number(v) || 0)} />
+                      <ReferenceLine y={CPA_HIGH_THRESHOLD} stroke="#dc2626" strokeDasharray="4 4" />
+                      <Line type="monotone" dataKey="avgCpa" stroke="#173b8c" strokeWidth={2.5} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </ChartCard>
 
-            <ChartCard title="Spend by ads account">
-              <ResponsiveContainer width="100%" height={Math.max(220, accountSeries.length * 34)}>
-                <BarChart data={accountSeries} layout="vertical" margin={{ top: 8, right: 24, left: 8, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e3e8f2" horizontal={false} />
-                  <XAxis type="number" tick={{ fontSize: 11, fill: "#56617A" }} tickFormatter={(v) => `₦${v}`} />
-                  <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 11, fill: "#56617A" }} />
-                  <Tooltip formatter={(v: unknown) => formatCurrency(Number(v) || 0)} />
-                  <Bar dataKey="spend" fill="#0051cf" radius={[0, 6, 6, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartCard>
+                <ChartCard title="Spend by ads account">
+                  <ResponsiveContainer width="100%" height={Math.max(220, accountSeries.length * 34)}>
+                    <BarChart data={accountSeries} layout="vertical" margin={{ top: 8, right: 24, left: 8, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e3e8f2" horizontal={false} />
+                      <XAxis type="number" tick={{ fontSize: 11, fill: "#56617A" }} tickFormatter={(v) => `₦${v}`} />
+                      <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 11, fill: "#56617A" }} />
+                      <Tooltip formatter={(v: unknown) => formatCurrency(Number(v) || 0)} />
+                      <Bar dataKey="spend" fill="#0051cf" radius={[0, 6, 6, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartCard>
+              </>
+            )}
+
+            <TableCard title="Ads Accounts">
+              {/* Mobile: stacked cards */}
+              <div className="divide-y divide-line sm:hidden print:hidden">
+                {filteredAdsAccounts.map((a) => {
+                  const business = businessById.get(a.businessAccountId);
+                  return (
+                    <div key={a.id} className="py-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-semibold text-ink">{a.name}</p>
+                        <StatusBadge status={a.status} />
+                      </div>
+                      <p className="mt-1 truncate text-xs text-ink-soft">{business?.name ?? "—"}</p>
+                      <p className="mt-1 text-xs text-ink-soft">
+                        Spent {formatCurrency(a.amountSpent)} · CPR {formatCurrency(a.cpa)}
+                        {business?.status === "closed" ? ` · Lost ${formatCurrency(business.amountLost)}` : ""}
+                      </p>
+                    </div>
+                  );
+                })}
+                {filteredAdsAccounts.length === 0 && (
+                  <p className="py-6 text-center text-xs text-ink-soft">No ads accounts match these filters.</p>
+                )}
+              </div>
+
+              {/* Desktop + print: table */}
+              <table className="hidden w-full text-left text-sm sm:table print:table">
+                <thead className="text-xs uppercase tracking-wide text-ink-soft">
+                  <tr>
+                    <th className="px-3 py-2 font-semibold">Business Center</th>
+                    <th className="px-3 py-2 font-semibold">Ads Account</th>
+                    <th className="px-3 py-2 text-right font-semibold">Spent</th>
+                    <th className="px-3 py-2 text-right font-semibold">CPR</th>
+                    <th className="px-3 py-2 text-right font-semibold">Lost</th>
+                    <th className="px-3 py-2 font-semibold">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {filteredAdsAccounts.map((a) => {
+                    const business = businessById.get(a.businessAccountId);
+                    return (
+                      <tr key={a.id}>
+                        <td className="max-w-[160px] truncate px-3 py-2.5 text-ink-soft">{business?.name ?? "—"}</td>
+                        <td className="px-3 py-2.5 font-medium text-ink">{a.name}</td>
+                        <td className="whitespace-nowrap px-3 py-2.5 text-right font-semibold text-navy">
+                          {formatCurrency(a.amountSpent)}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2.5 text-right text-ink-soft">
+                          {formatCurrency(a.cpa)}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2.5 text-right text-ink-soft">
+                          {business?.status === "closed" ? formatCurrency(business.amountLost) : "—"}
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <StatusBadge status={a.status} />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {filteredAdsAccounts.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="px-3 py-6 text-center text-xs text-ink-soft">
+                        No ads accounts match these filters.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </TableCard>
           </>
         )}
       </div>
@@ -312,6 +403,15 @@ function ChartCard({
       <h2 className="font-display text-sm font-bold text-ink">{title}</h2>
       {subtitle && <p className="mt-0.5 text-xs text-ink-soft">{subtitle}</p>}
       <div className="mt-3">{children}</div>
+    </div>
+  );
+}
+
+function TableCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="print-area overflow-hidden rounded-2xl border border-line bg-white p-4 sm:p-5">
+      <h2 className="font-display text-sm font-bold text-ink">{title}</h2>
+      <div className="mt-1 overflow-x-auto">{children}</div>
     </div>
   );
 }

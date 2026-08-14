@@ -1,9 +1,17 @@
 "use client";
 
-import { endOfDay, endOfMonth, endOfWeek, startOfDay, startOfMonth, startOfWeek } from "date-fns";
+import {
+  endOfDay,
+  endOfMonth,
+  endOfWeek,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+  subDays,
+} from "date-fns";
 import { cn } from "@/lib/utils";
 
-export type RangePreset = "today" | "week" | "month" | "custom";
+export type RangePreset = "today" | "yesterday" | "week" | "month" | "custom";
 
 export interface DateRange {
   start: number;
@@ -16,6 +24,10 @@ export function presetToRange(preset: RangePreset, customStart?: number, customE
   switch (preset) {
     case "today":
       return { start: startOfDay(now).getTime(), end: endOfDay(now).getTime(), preset };
+    case "yesterday": {
+      const y = subDays(now, 1);
+      return { start: startOfDay(y).getTime(), end: endOfDay(y).getTime(), preset };
+    }
     case "week":
       return { start: startOfWeek(now).getTime(), end: endOfWeek(now).getTime(), preset };
     case "month":
@@ -31,6 +43,7 @@ export function presetToRange(preset: RangePreset, customStart?: number, customE
 
 const PRESETS: { key: RangePreset; label: string }[] = [
   { key: "today", label: "Today" },
+  { key: "yesterday", label: "Yesterday" },
   { key: "week", label: "This Week" },
   { key: "month", label: "This Month" },
   { key: "custom", label: "Custom" },

@@ -197,5 +197,20 @@ firestore.indexes.json Composite index for dailyEntries — see Setup #3
 ### Firestore collections
 `gmailAccounts`, `businessAccounts`, `adsAccounts`, `dailyEntries`, `transactions` (the ledger
 behind Reports and Business Analysis — funding/spend/loss events), `cards`, `whitelistedUsers`.
-#   d a v o a d s m a n a g e r  
- 
+
+## Latest additions
+
+- **Yesterday** is now a date-range preset alongside Today/This Week/This Month/Custom, on
+  Reports and both Analysis pages.
+- Both Analysis pages now show a **data table** under the charts (not just visuals) — "Business
+  Centers" + "Funding Entries" on Business Analysis, "Ads Accounts" on Ads Analysis. The account
+  snapshot tables (Business Centers, Ads Accounts) always render regardless of the date range,
+  since they show current state, not date-ranged activity; the ledger tables (Funding Entries)
+  follow the same date range as the charts.
+- **Charges** — funding can now optionally carry a fee/charge separate from the funded amount
+  (e.g. a card processing fee). It rolls up into `BusinessAccount.totalCharges` and the global
+  `Total Charges` stat, and shows as its own column on the Funding Entries and Business Centers
+  tables.
+- **Cards** got a visual redesign — dark, card-shaped tiles (masked digits, linked business
+  account or "Not linked — funds any account", total funded, and a top-up count) instead of the
+  original plain white cards.
