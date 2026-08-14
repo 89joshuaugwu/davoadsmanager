@@ -195,7 +195,7 @@ export default function CardsPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {sortedCards.map((card, i) => (
               <motion.div
                 key={card.id}
@@ -203,7 +203,7 @@ export default function CardsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(i * 0.04, 0.3), duration: 0.25 }}
                 className={cn(
-                  "relative overflow-hidden rounded-2xl bg-navy p-4 text-white shadow-sm",
+                  "relative overflow-hidden rounded-xl bg-navy p-3.5 text-white shadow-sm",
                   card.status === "inactive" && "opacity-60",
                 )}
               >
@@ -245,34 +245,36 @@ export default function CardsPage() {
                   )}
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 gap-y-3">
+                <div className="mt-3 grid grid-cols-2 gap-y-2">
                   <div>
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-white/50">
+                    <p className="text-[10px] font-medium uppercase tracking-wide text-white/50">
                       Total funded
                     </p>
-                    <p className="mt-0.5 font-display text-lg font-bold">
+                    <p className="font-display text-base font-bold">
                       {formatCurrency(totalsByCard.get(card.id) ?? 0)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-white/50">
+                    <p className="text-[10px] font-medium uppercase tracking-wide text-white/50">
                       Total charges
                     </p>
-                    <p className="mt-0.5 font-display text-lg font-bold text-warning">
+                    <p className="font-display text-base font-bold text-warning">
                       {formatCurrency(chargesByCard.get(card.id) ?? 0)}
                     </p>
                   </div>
-                  <div className="col-span-2">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-white/50">
+                  <div className="col-span-2 mt-1 border-t border-white/5 pt-2">
+                    <p className="text-[10px] font-medium uppercase tracking-wide text-white/50">
                       Total Debit
                     </p>
-                    <p className="mt-0.5 font-display text-2xl font-bold text-white">
-                      {formatCurrency((totalsByCard.get(card.id) ?? 0) + (chargesByCard.get(card.id) ?? 0))}
-                    </p>
-                    <p className="mt-0.5 text-xs text-white/50">
-                      {countByCard.get(card.id) ?? 0} top-up
-                      {(countByCard.get(card.id) ?? 0) === 1 ? "" : "s"}
-                    </p>
+                    <div className="flex items-baseline gap-2">
+                      <p className="font-display text-xl font-bold text-white">
+                        {formatCurrency((totalsByCard.get(card.id) ?? 0) + (chargesByCard.get(card.id) ?? 0))}
+                      </p>
+                      <p className="text-xs text-white/50">
+                        ({countByCard.get(card.id) ?? 0} top-up
+                        {(countByCard.get(card.id) ?? 0) === 1 ? "" : "s"})
+                      </p>
+                    </div>
                   </div>
                 </div>
 
