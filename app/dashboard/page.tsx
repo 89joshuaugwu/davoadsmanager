@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AccountCards } from "@/components/AccountCards";
 import { AccountModal, type ModalMode } from "@/components/AccountModal";
 import { AccountTree, type TreeCallbacks } from "@/components/AccountTree";
+import { AdsDetailsView } from "@/components/AdsDetailsView";
 import { AppShell } from "@/components/AppShell";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { FinancialSummary } from "@/components/FinancialSummary";
@@ -24,7 +25,7 @@ import {
 import { buildAccountTree, cn, computeSummary } from "@/lib/utils";
 import type { AdsAccount, AdsStatus, BusinessAccount, Card, GmailAccount } from "@/types";
 
-type ViewMode = "tree" | "cards";
+type ViewMode = "tree" | "cards" | "ads-details";
 type PendingAction =
   | { kind: "delete-gmail"; gmail: GmailAccount }
   | { kind: "delete-business"; business: BusinessAccount }
@@ -147,6 +148,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-1 rounded-full border border-line bg-white p-1">
               <ViewToggleButton active={view === "tree"} onClick={() => setView("tree")} icon={ListTree} label="Tree" />
               <ViewToggleButton active={view === "cards"} onClick={() => setView("cards")} icon={LayoutGrid} label="Cards" />
+              <ViewToggleButton active={view === "ads-details"} onClick={() => setView("ads-details")} icon={LayoutGrid} label="Ads Details" />
             </div>
 
             <select
@@ -174,8 +176,10 @@ export default function DashboardPage() {
           </div>
         ) : view === "tree" ? (
           <AccountTree gmailAccounts={tree} callbacks={callbacks} />
-        ) : (
+        ) : view === "cards" ? (
           <AccountCards gmailAccounts={tree} callbacks={callbacks} />
+        ) : (
+          <AdsDetailsView adsAccounts={adsAccounts} />
         )}
       </div>
 

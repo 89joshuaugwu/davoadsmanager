@@ -75,13 +75,15 @@ export function FinancialSummary({ summary }: { summary: Summary }) {
             transition={{ delay: i * 0.05, duration: 0.3 }}
             className="rounded-2xl border border-line bg-white p-4 lg:p-5"
           >
-            <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${card.tint}`}>
-              <Icon size={18} />
+            <div className="flex items-center gap-2.5">
+              <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${card.tint}`}>
+                <Icon size={16} />
+              </div>
+              <p className="text-[10px] font-medium uppercase leading-tight tracking-wide text-ink-soft xl:text-xs">
+                {card.label}
+              </p>
             </div>
-            <p className="mt-3 text-xs font-medium uppercase tracking-wide text-ink-soft">
-              {card.label}
-            </p>
-            <p className="mt-1 font-display text-lg font-bold text-ink lg:text-2xl">
+            <p className="mt-2.5 truncate font-display text-lg font-bold text-ink xl:text-xl">
               <CountUp value={summary[card.key]} />
             </p>
           </motion.div>
