@@ -213,12 +213,17 @@ export default function CardsPage() {
                 />
 
                 <div className="flex items-start justify-between gap-2">
-                  <p className="font-display text-base font-bold">
-                    {card.name}
-                  </p>
+                  <div className="flex flex-col">
+                    <p className="font-display text-base font-bold leading-tight">
+                      {card.name}
+                    </p>
+                    <p className="mt-0.5 font-mono text-xs tracking-widest text-white/60">
+                      •••• {card.lastFourDigits}
+                    </p>
+                  </div>
                   <span
                     className={cn(
-                      "shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold",
+                      "shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider",
                       card.status === "active"
                         ? "bg-success-soft text-success"
                         : "bg-white/10 text-white/70",
@@ -228,51 +233,46 @@ export default function CardsPage() {
                   </span>
                 </div>
 
-                <p className="mt-1.5 font-mono text-sm tracking-widest text-white/60">
-                  •••• {card.lastFourDigits}
-                </p>
-
-                <div className="mt-3.5">
+                <div className="mt-2.5">
                   {card.businessAccountId ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-primary-soft">
-                      <Link2 size={11} />{" "}
+                    <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-semibold text-primary-soft">
+                      <Link2 size={10} />{" "}
                       {card.businessName || "Linked business account"}
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-white/60">
-                      <Unlink size={11} /> Not linked — funds any account
+                    <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium text-white/60">
+                      <Unlink size={10} /> Not linked — funds any account
                     </span>
                   )}
                 </div>
 
-                <div className="mt-3 grid grid-cols-2 gap-y-2">
+                <div className="mt-4 flex items-end justify-between border-t border-white/10 pt-3">
                   <div>
-                    <p className="text-[10px] font-medium uppercase tracking-wide text-white/50">
-                      Total funded
+                    <p className="text-[9px] font-semibold uppercase tracking-widest text-white/50">
+                      Funded
                     </p>
-                    <p className="font-display text-base font-bold">
+                    <p className="font-display text-sm font-bold">
                       {formatCurrency(totalsByCard.get(card.id) ?? 0)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-medium uppercase tracking-wide text-white/50">
-                      Total charges
+                    <p className="text-[9px] font-semibold uppercase tracking-widest text-white/50">
+                      Charges
                     </p>
-                    <p className="font-display text-base font-bold text-warning">
+                    <p className="font-display text-sm font-bold text-warning">
                       {formatCurrency(chargesByCard.get(card.id) ?? 0)}
                     </p>
                   </div>
-                  <div className="col-span-2 mt-1 border-t border-white/5 pt-2">
-                    <p className="text-[10px] font-medium uppercase tracking-wide text-white/50">
+                  <div className="text-right">
+                    <p className="text-[9px] font-semibold uppercase tracking-widest text-white/50">
                       Total Debit
                     </p>
-                    <div className="flex items-baseline gap-2">
-                      <p className="font-display text-xl font-bold text-white">
+                    <div className="flex items-baseline justify-end gap-1.5">
+                      <p className="font-display text-lg font-bold text-white">
                         {formatCurrency((totalsByCard.get(card.id) ?? 0) + (chargesByCard.get(card.id) ?? 0))}
                       </p>
-                      <p className="text-xs text-white/50">
-                        ({countByCard.get(card.id) ?? 0} top-up
-                        {(countByCard.get(card.id) ?? 0) === 1 ? "" : "s"})
+                      <p className="text-[10px] text-white/50">
+                        ({countByCard.get(card.id) ?? 0})
                       </p>
                     </div>
                   </div>
