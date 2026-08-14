@@ -1,0 +1,47 @@
+{
+  "name": "davopay-ads-manager",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DavoPay Ads Manager — internal TikTok Ads Manager account and finance tracker",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "crypto-js": "^4.2.0",
+    "date-fns": "^4.4.0",
+    "firebase": "^12.17.1",
+    "firebase-admin": "^14.2.0",
+    "framer-motion": "^13.1.0",
+    "jose": "^4.15.9",
+    "lucide-react": "^1.31.0",
+    "next": "^16.3.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "recharts": "^3.10.1",
+    "server-only": "^0.0.1"
+  },
+  "overrides": {
+    "jose": "^4.15.9"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/crypto-js": "^4.2.2",
+    "@types/node": "^22.10.5",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
+    "eslint": "^9.18.0",
+    "eslint-config-next": "^16.3.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.7.3"
+  },
+  "allowScripts": {
+    "@firebase/util@1.15.2": true,
+    "protobufjs@7.6.5": true,
+    "unrs-resolver@1.12.2": true
+  }
+}

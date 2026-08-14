@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #0051cf;
+  --color-primary-hover: #003fa3;
+  --color-primary-soft: #e8f0fe;
+  --color-navy: #173b8c;
+  --color-navy-soft: #24449c;
+  --color-brand: #135cf7;
+
+  --color-ink: #0f1729;
+  --color-ink-soft: #56617a;
+  --color-canvas: #f5f7fb;
+  --color-line: #e3e8f2;
+
+  --color-success: #0f9d63;
+  --color-success-soft: #e4f7ee;
+  --color-warning: #d97706;
+  --color-warning-soft: #fdf1de;
+  --color-danger: #dc2626;
+  --color-danger-soft: #fce9e9;
+  --color-neutral: #6b7690;
+  --color-neutral-soft: #eef1f7;
+
+  --font-display: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+
+  ::selection {
+    background-color: var(--color-primary-soft);
+    color: var(--color-primary);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 999px;
+    border: 2px solid var(--color-canvas);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+@keyframes flag-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.35); }
+  50% { box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
+}
+.animate-flag-pulse {
+  animation: flag-pulse 2.2s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ── Print: used by /reports for the "Export PDF" flow (window.print) ── */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff !important;
+  }
+  .print-area {
+    box-shadow: none !important;
+    border: none !important;
+  }
+  @page {
+    margin: 14mm;
+  }
+}
