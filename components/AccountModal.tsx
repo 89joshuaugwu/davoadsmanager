@@ -42,6 +42,12 @@ function todayInputDate(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+function yesterdayInputDate(): string {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 function formatInputDate(ts?: number): string {
   if (!ts) return todayInputDate();
   const d = new Date(ts);
@@ -386,7 +392,7 @@ function ModalFields({ mode, cards }: { mode: ModalMode; cards: Card[] }) {
             total so far: <span className="font-semibold text-ink">₦{mode.ads.amountSpent.toLocaleString()}</span>
           </p>
           <Field label="Date">
-            <input name="date" type="date" required defaultValue={todayInputDate()} max={todayInputDate()} className={inputClass} />
+            <input name="date" type="date" required defaultValue={yesterdayInputDate()} max={todayInputDate()} className={inputClass} />
           </Field>
           <Field label="Amount spent that day">
             <input name="spend" type="number" min={0} step="0.01" required autoFocus defaultValue={0} className={inputClass} />
