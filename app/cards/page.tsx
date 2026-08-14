@@ -265,7 +265,14 @@ export default function CardsPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="mt-2">
+                </div>
+
+                {card.notes && (
+                  <p className="mt-2.5 text-xs text-white/50">{card.notes}</p>
+                )}
+
+                <div className="relative mt-3.5 flex items-end justify-between border-t border-white/10 pt-3">
+                  <div>
                     <p className="text-[9px] font-semibold uppercase tracking-widest text-white/50">
                       Total Debit
                     </p>
@@ -278,25 +285,20 @@ export default function CardsPage() {
                       </p>
                     </div>
                   </div>
-                </div>
-
-                {card.notes && (
-                  <p className="mt-2.5 text-xs text-white/50">{card.notes}</p>
-                )}
-
-                <div className="relative mt-3.5 flex justify-end gap-1.5 border-t border-white/10 pt-3">
-                  <button
-                    onClick={() => setModalMode({ card })}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 hover:text-white"
-                  >
-                    <Pencil size={14} />
-                  </button>
-                  <button
-                    onClick={() => setPendingDelete(card)}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 hover:text-danger"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  <div className="flex gap-1.5 pb-0.5">
+                    <button
+                      onClick={() => setModalMode({ card })}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 hover:text-white"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      onClick={() => setPendingDelete(card)}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 hover:text-danger"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             ))}
