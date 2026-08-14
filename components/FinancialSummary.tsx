@@ -49,6 +49,12 @@ const CARDS = [
     tint: "bg-warning-soft text-warning",
   },
   {
+    key: "totalDebited" as const,
+    label: "Total Debited",
+    icon: Wallet,
+    tint: "bg-ink/10 text-ink",
+  },
+  {
     key: "remainingBalance" as const,
     label: "Remaining Active Balance",
     icon: PiggyBank,
@@ -58,7 +64,7 @@ const CARDS = [
 
 export function FinancialSummary({ summary }: { summary: Summary }) {
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-5 lg:gap-4">
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6 lg:gap-4">
       {CARDS.map((card, i) => {
         const Icon = card.icon;
         return (

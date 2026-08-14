@@ -107,6 +107,7 @@ export interface FinancialSummary {
   totalSpent: number;
   totalLost: number;
   totalCharges: number;
+  totalDebited: number;
   remainingBalance: number;
 }
 

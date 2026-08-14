@@ -91,6 +91,7 @@ export function computeSummary(
     totalSpent,
     totalLost,
     totalCharges,
+    totalDebited: totalFunded + totalCharges,
     remainingBalance: totalFunded - totalSpent - totalLost,
   };
 }

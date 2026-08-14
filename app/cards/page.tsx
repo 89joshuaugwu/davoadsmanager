@@ -246,32 +246,34 @@ export default function CardsPage() {
                   )}
                 </div>
 
-                <div className="mt-4 flex items-end justify-between border-t border-white/10 pt-3">
-                  <div>
-                    <p className="text-[9px] font-semibold uppercase tracking-widest text-white/50">
-                      Funded
-                    </p>
-                    <p className="font-display text-sm font-bold">
-                      {formatCurrency(totalsByCard.get(card.id) ?? 0)}
-                    </p>
+                <div className="mt-4 border-t border-white/10 pt-3">
+                  <div className="flex items-start gap-8">
+                    <div>
+                      <p className="text-[9px] font-semibold uppercase tracking-widest text-white/50">
+                        Funded
+                      </p>
+                      <p className="font-display text-sm font-bold">
+                        {formatCurrency(totalsByCard.get(card.id) ?? 0)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-semibold uppercase tracking-widest text-white/50">
+                        Charges
+                      </p>
+                      <p className="font-display text-sm font-bold text-warning">
+                        {formatCurrency(chargesByCard.get(card.id) ?? 0)}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-[9px] font-semibold uppercase tracking-widest text-white/50">
-                      Charges
-                    </p>
-                    <p className="font-display text-sm font-bold text-warning">
-                      {formatCurrency(chargesByCard.get(card.id) ?? 0)}
-                    </p>
-                  </div>
-                  <div className="text-right">
+                  <div className="mt-2">
                     <p className="text-[9px] font-semibold uppercase tracking-widest text-white/50">
                       Total Debit
                     </p>
-                    <div className="flex items-baseline justify-end gap-1.5">
-                      <p className="font-display text-lg font-bold text-white">
+                    <div className="flex items-baseline gap-1.5">
+                      <p className="font-display text-xl font-bold text-white">
                         {formatCurrency((totalsByCard.get(card.id) ?? 0) + (chargesByCard.get(card.id) ?? 0))}
                       </p>
-                      <p className="text-[10px] text-white/50">
+                      <p className="text-xs text-white/50">
                         ({countByCard.get(card.id) ?? 0})
                       </p>
                     </div>
