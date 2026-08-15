@@ -40,7 +40,7 @@ export function AdsDetailsView({ adsAccounts }: { adsAccounts: AdsAccount[] }) {
                   {card.label}
                 </p>
               </div>
-              <p className="mt-2.5 truncate font-display text-2xl font-bold text-ink">
+              <p className="mt-2.5 font-display text-lg font-bold tracking-tight text-ink lg:text-xl xl:text-2xl">
                 {card.value}
               </p>
             </motion.div>

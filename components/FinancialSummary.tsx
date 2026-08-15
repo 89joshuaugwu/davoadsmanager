@@ -83,7 +83,7 @@ export function FinancialSummary({ summary }: { summary: Summary }) {
                 {card.label}
               </p>
             </div>
-            <p className="mt-2.5 truncate font-display text-lg font-bold text-ink xl:text-xl">
+            <p className="mt-2.5 font-display text-base font-bold tracking-tight text-ink lg:text-lg xl:text-[1.15rem]">
               <CountUp value={summary[card.key]} />
             </p>
           </motion.div>
