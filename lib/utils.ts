@@ -84,7 +84,7 @@ export function getBusinessFinancials(
   const b_ads = adsAccounts.filter((a) => a.businessAccountId === business.id);
   const spent = b_ads.reduce((sum, a) => sum + a.amountSpent, 0);
   let lost = business.amountLost;
-  let remaining = business.amountFunded - spent - lost - (business.totalCharges || 0);
+  let remaining = business.amountFunded - spent - lost;
 
   if (b_ads.length === 3 && b_ads.every((a) => a.status === "blocked") && remaining > 0) {
     lost += remaining;
@@ -119,7 +119,7 @@ export function computeSummary(
     totalLost,
     totalCharges,
     totalDebited: totalFunded + totalCharges,
-    remainingBalance: totalFunded - totalSpent - totalLost - totalCharges,
+    remainingBalance: totalFunded - totalSpent - totalLost,
   };
 }
 
