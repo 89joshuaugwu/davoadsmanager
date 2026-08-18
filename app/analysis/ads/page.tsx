@@ -32,6 +32,7 @@ import {
   aggregateEntriesByAccount,
   aggregateEntriesByDate,
   formatCurrency,
+  getBusinessFinancials,
 } from "@/lib/utils";
 import type { AdsAccount, AdsStatus, BusinessAccount, DailyEntry, GmailAccount } from "@/types";
 
@@ -297,6 +298,8 @@ function AdsAnalysisContent() {
               <div className="divide-y divide-line sm:hidden print:hidden">
                 {filteredAdsAccounts.map((a) => {
                   const business = businessById.get(a.businessAccountId);
+                  const bFins = business ? getBusinessFinancials(business, adsAccounts) : null;
+                  const lossAmount = bFins ? bFins.lost : 0;
                   return (
                     <div key={a.id} className="py-3">
                       <div className="flex items-center justify-between gap-2">
@@ -306,7 +309,7 @@ function AdsAnalysisContent() {
                       <p className="mt-1 truncate text-xs text-ink-soft">{business?.name ?? "—"}</p>
                       <p className="mt-1 text-xs text-ink-soft">
                         Spent {formatCurrency(a.amountSpent)} · CPR {formatCurrency(a.cpa)}
-                        {business?.status === "closed" ? ` · Lost ${formatCurrency(business.amountLost)}` : ""}
+                        {lossAmount > 0 ? ` · Lost ${formatCurrency(lossAmount)}` : ""}
                       </p>
                     </div>
                   );
@@ -330,25 +333,27 @@ function AdsAnalysisContent() {
                 </thead>
                 <tbody className="divide-y divide-line">
                   {filteredAdsAccounts.map((a) => {
-                    const business = businessById.get(a.businessAccountId);
-                    return (
-                      <tr key={a.id}>
-                        <td className="max-w-[160px] truncate px-3 py-2.5 text-ink-soft">{business?.name ?? "—"}</td>
-                        <td className="px-3 py-2.5 font-medium text-ink">{a.name}</td>
-                        <td className="whitespace-nowrap px-3 py-2.5 text-right font-semibold text-navy">
-                          {formatCurrency(a.amountSpent)}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-2.5 text-right text-ink-soft">
-                          {formatCurrency(a.cpa)}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-2.5 text-right text-ink-soft">
-                          {business?.status === "closed" ? formatCurrency(business.amountLost) : "—"}
-                        </td>
-                        <td className="px-3 py-2.5">
-                          <StatusBadge status={a.status} />
-                        </td>
-                      </tr>
-                    );
+                      const business = businessById.get(a.businessAccountId);
+                      const bFins = business ? getBusinessFinancials(business, adsAccounts) : null;
+                      const lossAmount = bFins ? bFins.lost : 0;
+                      return (
+                        <tr key={a.id}>
+                          <td className="max-w-[160px] truncate px-3 py-2.5 text-ink-soft">{business?.name ?? "—"}</td>
+                          <td className="px-3 py-2.5 font-medium text-ink">{a.name}</td>
+                          <td className="whitespace-nowrap px-3 py-2.5 text-right font-semibold text-navy">
+                            {formatCurrency(a.amountSpent)}
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-2.5 text-right text-ink-soft">
+                            {formatCurrency(a.cpa)}
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-2.5 text-right text-ink-soft">
+                            {lossAmount > 0 ? formatCurrency(lossAmount) : "—"}
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <StatusBadge status={a.status} />
+                          </td>
+                        </tr>
+                      );
                   })}
                   {filteredAdsAccounts.length === 0 && (
                     <tr>

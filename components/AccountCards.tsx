@@ -10,6 +10,7 @@ import {
   MAX_BUSINESS_PER_GMAIL,
   formatCurrency,
   getCpaAlertLevel,
+  getBusinessFinancials,
 } from "@/lib/utils";
 import type { GmailAccountNode } from "@/types";
 
@@ -45,7 +46,10 @@ function GmailCard({ gmail, callbacks }: { gmail: GmailAccountNode; callbacks: T
     (s, b) => s + b.adsAccounts.reduce((s2, a) => s2 + a.amountSpent, 0),
     0
   );
-  const lost = gmail.businessAccounts.reduce((s, b) => s + b.amountLost, 0);
+  const lost = gmail.businessAccounts.reduce(
+    (s, b) => s + getBusinessFinancials(b, b.adsAccounts).lost,
+    0
+  );
   const anyFlagged = gmail.businessAccounts.some((b) => b.adsAccounts.some((a) => getCpaAlertLevel(a) !== "normal"));
 
   return (

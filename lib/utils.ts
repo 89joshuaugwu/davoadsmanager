@@ -77,22 +77,49 @@ export function buildAccountTree(
     });
 }
 
+export function getBusinessFinancials(
+  business: Pick<BusinessAccount, "id" | "amountFunded" | "amountLost" | "totalCharges">,
+  adsAccounts: Pick<AdsAccount, "amountSpent" | "status" | "businessAccountId">[]
+) {
+  const b_ads = adsAccounts.filter((a) => a.businessAccountId === business.id);
+  const spent = b_ads.reduce((sum, a) => sum + a.amountSpent, 0);
+  let lost = business.amountLost;
+  let remaining = business.amountFunded - spent - lost - (business.totalCharges || 0);
+
+  if (b_ads.length === 3 && b_ads.every((a) => a.status === "blocked") && remaining > 0) {
+    lost += remaining;
+    remaining = 0;
+  }
+
+  return { spent, remaining, lost };
+}
+
 /** Pure rollup: Total Funded − Total Spent − Total Lost = Remaining Active Balance. */
 export function computeSummary(
   businessAccounts: BusinessAccount[],
   adsAccounts: AdsAccount[]
 ): FinancialSummary {
-  const totalFunded = businessAccounts.reduce((sum, b) => sum + b.amountFunded, 0);
-  const totalSpent = adsAccounts.reduce((sum, a) => sum + a.amountSpent, 0);
-  const totalLost = businessAccounts.reduce((sum, b) => sum + b.amountLost, 0);
-  const totalCharges = businessAccounts.reduce((sum, b) => sum + (b.totalCharges || 0), 0);
+  let totalFunded = 0;
+  let totalSpent = 0;
+  let totalLost = 0;
+  let totalCharges = 0;
+
+  for (const b of businessAccounts) {
+    totalFunded += b.amountFunded;
+    totalCharges += b.totalCharges || 0;
+    
+    const fins = getBusinessFinancials(b, adsAccounts);
+    totalSpent += fins.spent;
+    totalLost += fins.lost;
+  }
+
   return {
     totalFunded,
     totalSpent,
     totalLost,
     totalCharges,
     totalDebited: totalFunded + totalCharges,
-    remainingBalance: totalFunded - totalSpent - totalLost,
+    remainingBalance: totalFunded - totalSpent - totalLost - totalCharges,
   };
 }
 

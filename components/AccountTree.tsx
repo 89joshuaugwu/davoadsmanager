@@ -22,6 +22,7 @@ import {
   formatCurrency,
   formatDate,
   getCpaAlertLevel,
+  getBusinessFinancials,
 } from "@/lib/utils";
 import type { AdsAccountNode, AdsStatus, BusinessAccountNode, GmailAccountNode } from "@/types";
 
@@ -146,8 +147,7 @@ function BusinessNode({
 }) {
   const [open, setOpen] = useState(true);
   const adsCount = business.adsAccounts.length;
-  const totalSpent = business.adsAccounts.reduce((s, a) => s + a.amountSpent, 0);
-  const remaining = business.amountFunded - totalSpent - business.amountLost;
+  const { remaining } = getBusinessFinancials(business, business.adsAccounts);
 
   return (
     <div className="rounded-xl border border-line bg-white">
