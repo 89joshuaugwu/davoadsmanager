@@ -1,6 +1,6 @@
 "use client";
 
-import { CreditCard, FileText, LayoutDashboard, LineChart, LogOut, PieChart } from "lucide-react";
+import { CreditCard, FileText, LayoutDashboard, LineChart, LogOut, PieChart, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
@@ -18,7 +18,10 @@ const NAV_ITEMS = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { user, signOutUser } = useAuth();
+  const { user, profile, signOutUser } = useAuth();
+  const navItems = profile?.role === "super_admin"
+    ? [...NAV_ITEMS, { href: "/admin", label: "Admin & audit", shortLabel: "Admin", icon: ShieldCheck }]
+    : NAV_ITEMS;
 
   return (
     <div className="min-h-screen bg-canvas">
@@ -33,7 +36,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </Link>
 
         <nav className="flex-1 space-y-1 px-3 pt-2">
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href || pathname.startsWith(item.href + "?");
             return (
@@ -83,7 +86,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* Mobile bottom tabs */}
       <nav className="no-print fixed inset-x-0 bottom-0 z-40 flex border-t border-line bg-white lg:hidden">
-        {NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const Icon = item.icon;
           const active = pathname === item.href || pathname.startsWith(item.href + "?");
           return (

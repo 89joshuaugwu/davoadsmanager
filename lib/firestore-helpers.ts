@@ -33,7 +33,7 @@ function scoped(ref: ReturnType<typeof collection>, workspaceId: string) {
 }
 
 function subscribeWorkspaceRows<T>(ref: ReturnType<typeof collection>, cb: (rows: T[]) => void) {
-  let unsubscribe = () => undefined;
+  let unsubscribe: () => void = () => {};
   let cancelled = false;
   void currentScope().then(({ workspaceId }) => {
     if (cancelled) return;
