@@ -14,7 +14,6 @@ service cloud.firestore {
     function canReadData() { return isSuperAdmin() || (hasProfile() && resource.data.workspaceId == userDoc().data.workspaceId); }
     function canCreateData() { return isSuperAdmin() || (hasProfile() && request.resource.data.workspaceId == userDoc().data.workspaceId && request.resource.data.ownerId == request.auth.uid); }
     function canEditData() { return isSuperAdmin() || (hasProfile() && resource.data.workspaceId == userDoc().data.workspaceId && request.resource.data.workspaceId == resource.data.workspaceId && request.resource.data.ownerId == resource.data.ownerId); }
-    }
 
     match /whitelistedUsers/{email} {
       allow read: if isSignedIn();

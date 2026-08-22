@@ -14,6 +14,7 @@ export async function POST(request: NextRequest) {
     const workspace = db.collection("workspaces").doc(); const now = Date.now(); const batch = db.batch();
     batch.set(workspace, { name: "Joshua's Ads Workspace", ownerId: decoded.uid, createdAt: now, updatedAt: now });
     batch.set(profile, { email, displayName: decoded.name || "Super Admin", role: "super_admin", workspaceId: workspace.id, active: true, createdAt: now, updatedAt: now });
+    batch.set(db.collection("whitelistedUsers").doc(email), { addedAt: now, addedBy: decoded.uid });
     await batch.commit(); return NextResponse.json({ ok: true, workspaceId: workspace.id });
   } catch (error) { console.error("bootstrap", error); return NextResponse.json({ error: "Unable to bootstrap" }, { status: 500 }); }
 }
