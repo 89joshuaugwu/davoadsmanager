@@ -9,9 +9,44 @@ export type BusinessStatus = "active" | "closed";
 export type AdsStatus = "active" | "paused" | "blocked" | "closed";
 export type AdCreationStatus = "created" | "not_created";
 export type TransactionType = "funding" | "spend" | "loss";
+export type UserRole = "super_admin" | "member";
+
+export interface Workspace {
+  id: string;
+  name: string;
+  ownerId: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface AppUser {
+  id: string;
+  email: string;
+  displayName: string;
+  role: UserRole;
+  workspaceId: string;
+  active: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface AuditLog {
+  id: string;
+  workspaceId: string;
+  actorId: string;
+  actorEmail: string;
+  action: string;
+  entityType: "gmailAccount" | "businessAccount" | "adsAccount" | "dailyEntry" | "card" | "transaction" | "user" | "workspace";
+  entityId: string;
+  entityLabel?: string;
+  details?: Record<string, unknown>;
+  createdAt: number;
+}
 
 export interface GmailAccount {
   id: string;
+  workspaceId: string;
+  ownerId: string;
   email: string;
   encryptedPassword: string;
   tiktokAccountName?: string;
@@ -24,6 +59,8 @@ export interface GmailAccount {
 
 export interface BusinessAccount {
   id: string;
+  workspaceId: string;
+  ownerId: string;
   gmailAccountId: string;
   name: string;
   officialDomain?: string;
@@ -38,6 +75,8 @@ export interface BusinessAccount {
 
 export interface AdsAccount {
   id: string;
+  workspaceId: string;
+  ownerId: string;
   businessAccountId: string;
   gmailAccountId: string;
   name: string;
@@ -53,6 +92,8 @@ export interface AdsAccount {
 
 export interface Transaction {
   id: string;
+  workspaceId: string;
+  ownerId: string;
   type: TransactionType;
   amount: number;
   charge?: number;
@@ -73,6 +114,8 @@ export interface Transaction {
  *  the running totals cached on AdsAccount, and for the analysis charts. */
 export interface DailyEntry {
   id: string;
+  workspaceId: string;
+  ownerId: string;
   adsAccountId: string;
   adsName: string;
   businessAccountId: string;
@@ -92,6 +135,8 @@ export type CardStatus = "active" | "inactive";
  *  card — a card can also sit unlinked until it's assigned to one. */
 export interface Card {
   id: string;
+  workspaceId: string;
+  ownerId: string;
   name: string;
   lastFourDigits: string;
   businessAccountId?: string;

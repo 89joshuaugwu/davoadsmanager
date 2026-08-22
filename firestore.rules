@@ -7,41 +7,45 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Whitelist doc ID must be the lowercased email, added manually via the Firebase Console.
-    function isWhitelisted() {
-      return isSignedIn() &&
-        exists(/databases/$(database)/documents/whitelistedUsers/$(request.auth.token.email));
+    function userDoc() { return get(/databases/$(database)/documents/users/$(request.auth.uid)); }
+    function hasProfile() { return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && userDoc().data.active == true; }
+    function isSuperAdmin() { return hasProfile() && userDoc().data.role == 'super_admin'; }
+    function ownsWorkspace(workspaceId) { return hasProfile() && userDoc().data.workspaceId == workspaceId; }
+    function canReadData() { return isSuperAdmin() || (hasProfile() && resource.data.workspaceId == userDoc().data.workspaceId); }
+    function canCreateData() { return isSuperAdmin() || (hasProfile() && request.resource.data.workspaceId == userDoc().data.workspaceId && request.resource.data.ownerId == request.auth.uid); }
+    function canEditData() { return isSuperAdmin() || (hasProfile() && resource.data.workspaceId == userDoc().data.workspaceId && request.resource.data.workspaceId == resource.data.workspaceId && request.resource.data.ownerId == resource.data.ownerId); }
     }
 
     match /whitelistedUsers/{email} {
-      // Anyone signed in can check membership (needed for the client-side gate);
-      // the list itself is only ever edited by hand in the console.
       allow read: if isSignedIn();
       allow write: if false;
     }
+    match /users/{uid} { allow read: if isSignedIn() && (request.auth.uid == uid || isSuperAdmin()); allow write: if false; }
+    match /workspaces/{workspaceId} { allow read: if ownsWorkspace(workspaceId) || isSuperAdmin(); allow write: if false; }
+    match /auditLogs/{id} { allow read: if isSuperAdmin(); allow write: if false; }
 
     match /gmailAccounts/{docId} {
-      allow read, write: if isWhitelisted();
+      allow read: if canReadData(); allow create: if canCreateData(); allow update, delete: if canEditData();
     }
 
     match /businessAccounts/{docId} {
-      allow read, write: if isWhitelisted();
+      allow read: if canReadData(); allow create: if canCreateData(); allow update, delete: if canEditData();
     }
 
     match /adsAccounts/{docId} {
-      allow read, write: if isWhitelisted();
+      allow read: if canReadData(); allow create: if canCreateData(); allow update, delete: if canEditData();
     }
 
     match /dailyEntries/{docId} {
-      allow read, write: if isWhitelisted();
+      allow read: if canReadData(); allow create: if canCreateData(); allow update, delete: if canEditData();
     }
 
     match /cards/{docId} {
-      allow read, write: if isWhitelisted();
+      allow read: if canReadData(); allow create: if canCreateData(); allow update, delete: if canEditData();
     }
 
     match /transactions/{docId} {
-      allow read, write: if isWhitelisted();
+      allow read: if canReadData(); allow create: if canCreateData(); allow update, delete: if canEditData();
     }
   }
 }
