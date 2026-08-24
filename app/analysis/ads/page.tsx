@@ -179,18 +179,18 @@ function AdsAnalysisContent() {
 
   return (
     <AppShell>
-      <div className="mx-auto max-w-6xl space-y-5 px-4 py-6">
+      <div className="mx-auto max-w-7xl space-y-5 px-4 py-5 sm:px-6 sm:py-7">
         <div className="no-print flex flex-wrap items-center justify-between gap-3">
-          <h1 className="font-display text-xl font-bold text-ink">Ads Account Analysis</h1>
+          <div><p className="eyebrow">Performance intelligence</p><h1 className="mt-1 font-display text-2xl font-extrabold tracking-tight text-ink">Ads account analysis</h1><p className="mt-1 text-sm text-ink-soft">See spend direction, CPR risk, and which accounts need attention.</p></div>
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-hover"
+            className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(0,81,207,.20)] transition hover:-translate-y-0.5 hover:bg-primary-hover"
           >
             <Printer size={16} /> Print / Export PDF
           </button>
         </div>
 
-        <div className="no-print flex flex-wrap gap-2.5">
+        <div className="app-surface-muted no-print flex flex-wrap gap-2.5 p-3">
           <MultiSelectFilter
             label="Gmail Accounts"
             options={gmailAccounts.map((g) => ({ id: g.id, label: g.email }))}
