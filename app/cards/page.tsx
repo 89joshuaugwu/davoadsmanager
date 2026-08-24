@@ -18,7 +18,7 @@ import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import type { BusinessAccount, Card, Transaction } from "@/types";
 
 export default function CardsPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, viewedWorkspaceId, isReadOnlyView } = useAuth();
   const router = useRouter();
 
   const [cards, setCards] = useState<Card[]>([]);
@@ -48,20 +48,20 @@ export default function CardsPage() {
     const unsub1 = subscribeCards((rows) => {
       setCards(rows);
       markLoaded();
-    });
+    }, viewedWorkspaceId);
     const unsub2 = subscribeBusinessAccounts((rows) => {
       setBusinessAccounts(rows);
       markLoaded();
-    });
+    }, viewedWorkspaceId);
     return () => {
       unsub1();
       unsub2();
     };
-  }, [user]);
+  }, [user, viewedWorkspaceId]);
 
   useEffect(() => {
     if (!user) return;
-    getCardFundingTransactions().then((txs) => {
+    getCardFundingTransactions(viewedWorkspaceId).then((txs) => {
       const totals = new Map<string, number>();
       const charges = new Map<string, number>();
       const counts = new Map<string, number>();
@@ -76,7 +76,7 @@ export default function CardsPage() {
       setCountByCard(counts);
       setTransactions(txs.sort((a, b) => b.createdAt - a.createdAt));
     });
-  }, [user, cards]);
+  }, [user, cards, viewedWorkspaceId]);
 
   const sortedCards = useMemo(
     () => cards.slice().sort((a, b) => b.createdAt - a.createdAt),
@@ -110,12 +110,12 @@ export default function CardsPage() {
               gone through each one.
             </p>
           </div>
-          <button
+          {!isReadOnlyView && <button
             onClick={() => setModalMode({})}
             className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-hover"
           >
             <Plus size={16} /> Add Card
-          </button>
+          </button>}
         </div>
 
         <div className="flex gap-1 rounded-lg bg-line/60 p-1 max-w-fit">
@@ -285,7 +285,7 @@ export default function CardsPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex gap-1.5 pb-0.5">
+                  {!isReadOnlyView && <div className="flex gap-1.5 pb-0.5">
                     <button
                       onClick={() => setModalMode({ card })}
                       className="flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 hover:text-white"
@@ -298,7 +298,7 @@ export default function CardsPage() {
                     >
                       <Trash2 size={14} />
                     </button>
-                  </div>
+                  </div>}
                 </div>
               </motion.div>
             ))}
@@ -306,20 +306,20 @@ export default function CardsPage() {
         )}
       </div>
 
-      <CardModal
+      {!isReadOnlyView && <CardModal
         mode={modalMode}
         businessAccounts={businessAccounts}
         onClose={() => setModalMode(null)}
-      />
+      />}
 
-      <ConfirmDialog
+      {!isReadOnlyView && <ConfirmDialog
         open={pendingDelete !== null}
         title="Delete this card?"
         description={`This removes "${pendingDelete?.name}" from card management. Past funding records that used it are kept as-is.`}
         confirmLabel="Delete"
         onConfirm={confirmDelete}
         onCancel={() => setPendingDelete(null)}
-      />
+      />}
     </AppShell>
   );
 }

@@ -18,7 +18,7 @@ const NAV_ITEMS = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { user, profile, signOutUser } = useAuth();
+  const { user, profile, signOutUser, viewedWorkspaceId, workspaceUsers, setViewedWorkspaceId, isReadOnlyView } = useAuth();
   const [moreOpen, setMoreOpen] = useState(false);
   const navItems = profile?.role === "super_admin"
     ? [...NAV_ITEMS, { href: "/admin/daily-revenue", label: "Daily revenue", shortLabel: "Revenue", icon: DollarSign }, { href: "/admin", label: "Admin & audit", shortLabel: "Admin", icon: ShieldCheck }]
@@ -39,7 +39,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </Link>
 
-        <div className="mt-5 rounded-2xl border border-line/70 bg-canvas/80 px-3 py-2.5"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-ink-soft">Current workspace</p><p className="mt-1 truncate text-sm font-semibold text-ink">{profile?.displayName || "Loading workspace"}</p><p className="mt-0.5 text-[11px] text-ink-soft">{profile?.role === "super_admin" ? "Super administrator" : "Member workspace"}</p></div>
+        <div className="mt-5 rounded-2xl border border-line/70 bg-canvas/80 px-3 py-2.5"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-ink-soft">{isReadOnlyView ? "Viewing member data" : "Current workspace"}</p>{profile?.role === "super_admin" ? <select value={viewedWorkspaceId ?? profile.workspaceId} onChange={(event) => setViewedWorkspaceId(event.target.value === profile.workspaceId ? null : event.target.value)} className="mt-1 w-full truncate bg-transparent text-sm font-semibold text-ink outline-none"><option value={profile.workspaceId}>My workspace</option>{workspaceUsers.filter((member) => member.workspaceId !== profile.workspaceId).map((member) => <option key={member.id} value={member.workspaceId}>{member.displayName || member.email}</option>)}</select> : <p className="mt-1 truncate text-sm font-semibold text-ink">{profile?.displayName || "Loading workspace"}</p>}<p className="mt-0.5 text-[11px] text-ink-soft">{isReadOnlyView ? "Read-only transparency mode" : profile?.role === "super_admin" ? "Super administrator" : "Member workspace"}</p></div>
 
         <nav className="mt-5 flex-1 space-y-1.5">
           {navItems.map((item) => {
@@ -87,6 +87,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <LogOut size={17} />
         </button>
       </header>
+      {profile?.role === "super_admin" && <div className="no-print border-b border-line/70 bg-canvas px-4 py-2 lg:hidden"><select aria-label="Select workspace to view" value={viewedWorkspaceId ?? profile.workspaceId} onChange={(event) => setViewedWorkspaceId(event.target.value === profile.workspaceId ? null : event.target.value)} className="w-full rounded-xl border border-line bg-white px-3 py-2 text-xs font-semibold text-ink outline-none"><option value={profile.workspaceId}>My workspace</option>{workspaceUsers.filter((member) => member.workspaceId !== profile.workspaceId).map((member) => <option key={member.id} value={member.workspaceId}>View {member.displayName || member.email} (read only)</option>)}</select></div>}
 
       <main className="pb-24 lg:pb-8 lg:pl-[17rem]">{children}</main>
 

@@ -4,7 +4,7 @@ import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { auth } from "@/lib/firebase";
 import { isEmailWhitelisted } from "@/lib/firestore-helpers";
-import { doc, onSnapshot } from "firebase/firestore";
+import { collection, doc, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { AppUser } from "@/types";
 
@@ -16,6 +16,11 @@ interface AuthContextValue {
   profile: AppUser | null;
   signOutUser: () => Promise<void>;
   clearAccessDenied: () => void;
+  /** A Super Admin may inspect a member workspace; member accounts always stay in their own workspace. */
+  viewedWorkspaceId: string | null;
+  workspaceUsers: AppUser[];
+  setViewedWorkspaceId: (workspaceId: string | null) => void;
+  isReadOnlyView: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue>({
@@ -25,6 +30,10 @@ const AuthContext = createContext<AuthContextValue>({
   profile: null,
   signOutUser: async () => {},
   clearAccessDenied: () => {},
+  viewedWorkspaceId: null,
+  workspaceUsers: [],
+  setViewedWorkspaceId: () => {},
+  isReadOnlyView: false,
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -32,6 +41,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [accessDenied, setAccessDenied] = useState(false);
   const [profile, setProfile] = useState<AppUser | null>(null);
+  const [viewedWorkspaceId, setViewedWorkspaceIdState] = useState<string | null>(null);
+  const [workspaceUsers, setWorkspaceUsers] = useState<AppUser[]>([]);
 
   useEffect(() => {
     let unsubscribeProfile = () => {};
@@ -60,6 +71,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => { unsubscribe(); unsubscribeProfile(); };
   }, []);
 
+  useEffect(() => {
+    if (profile?.role !== "super_admin") { setWorkspaceUsers([]); return; }
+    return onSnapshot(query(collection(db, "users"), where("active", "==", true)), (snapshot) => {
+      setWorkspaceUsers(snapshot.docs.map((item) => ({ id: item.id, ...item.data() } as AppUser)).sort((a, b) => a.displayName.localeCompare(b.displayName)));
+    });
+  }, [profile?.role]);
+
+  const setViewedWorkspaceId = (workspaceId: string | null) => {
+    const next = profile?.role === "super_admin" ? workspaceId : null;
+    setViewedWorkspaceIdState(next);
+  };
+  const isReadOnlyView = !!viewedWorkspaceId && viewedWorkspaceId !== profile?.workspaceId;
+
   const signOutUser = async () => {
     await signOut(auth);
   };
@@ -67,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const clearAccessDenied = () => setAccessDenied(false);
 
   return (
-    <AuthContext.Provider value={{ user, loading, accessDenied, profile, signOutUser, clearAccessDenied }}>
+    <AuthContext.Provider value={{ user, loading, accessDenied, profile, signOutUser, clearAccessDenied, viewedWorkspaceId, workspaceUsers, setViewedWorkspaceId, isReadOnlyView }}>
       {children}
     </AuthContext.Provider>
   );

@@ -18,7 +18,7 @@ const TYPE_LABEL: Record<Transaction["type"], string> = {
 };
 
 export default function ReportsPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, viewedWorkspaceId, isReadOnlyView } = useAuth();
   const router = useRouter();
 
   const [range, setRangeValue] = useState<DateRange>(() => presetToRange("today"));
@@ -36,10 +36,10 @@ export default function ReportsPage() {
 
   useEffect(() => {
     if (!user) return;
-    getTransactionsInRange(range.start, range.end)
+    getTransactionsInRange(range.start, range.end, viewedWorkspaceId)
       .then(setTransactions)
       .finally(() => setFetching(false));
-  }, [user, range.start, range.end]);
+  }, [user, range.start, range.end, viewedWorkspaceId]);
 
   const totals = useMemo(() => {
     const funded = transactions.filter((t) => t.type === "funding").reduce((s, t) => s + t.amount, 0);
@@ -61,6 +61,7 @@ export default function ReportsPage() {
       <div className="mx-auto max-w-6xl space-y-5 px-4 py-6">
         <div className="no-print flex flex-wrap items-center justify-between gap-3">
           <h1 className="font-display text-xl font-bold text-ink">Reports</h1>
+          {isReadOnlyView && <p className="mt-1 text-sm font-medium text-primary">Read-only member workspace report</p>}
           <button
             onClick={() => window.print()}
             className="flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-hover"

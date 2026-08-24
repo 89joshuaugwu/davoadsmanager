@@ -33,7 +33,7 @@ type PendingAction =
   | { kind: "delete-ads"; ads: AdsAccount };
 
 export default function DashboardPage() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, viewedWorkspaceId, isReadOnlyView } = useAuth();
   const router = useRouter();
 
   const [gmailAccounts, setGmailAccounts] = useState<GmailAccount[]>([]);
@@ -61,26 +61,26 @@ export default function DashboardPage() {
     const unsub1 = subscribeGmailAccounts((rows) => {
       setGmailAccounts(rows);
       markLoaded();
-    });
+    }, viewedWorkspaceId);
     const unsub2 = subscribeBusinessAccounts((rows) => {
       setBusinessAccounts(rows);
       markLoaded();
-    });
+    }, viewedWorkspaceId);
     const unsub3 = subscribeAdsAccounts((rows) => {
       setAdsAccounts(rows);
       markLoaded();
-    });
+    }, viewedWorkspaceId);
     const unsub4 = subscribeCards((rows) => {
       setCards(rows);
       markLoaded();
-    });
+    }, viewedWorkspaceId);
     return () => {
       unsub1();
       unsub2();
       unsub3();
       unsub4();
     };
-  }, [user]);
+  }, [user, viewedWorkspaceId]);
 
   const tree = useMemo(() => {
     const filteredAds = adStatusFilter === "all" ? adsAccounts : adsAccounts.filter((a) => a.adStatus === adStatusFilter);
@@ -146,7 +146,7 @@ export default function DashboardPage() {
             <div className="max-w-2xl"><p className="text-[10px] font-bold uppercase tracking-[.2em] text-white/60">Live workspace overview</p><h1 className="mt-3 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">Good to see you, {profile?.displayName?.split(" ")[0] || "there"}.</h1><p className="mt-2 max-w-xl text-sm leading-6 text-white/70 sm:text-base">Keep funding, daily spend, account health, and performance decisions in one calm command centre.</p></div>
             <div className="grid grid-cols-3 divide-x divide-white/15 rounded-2xl border border-white/15 bg-white/[.07] p-3 backdrop-blur-sm sm:min-w-[25rem]"><HeroMetric label="Gmail" value={gmailAccounts.length} /><HeroMetric label="Businesses" value={businessAccounts.length} /><HeroMetric label="Ad accounts" value={adsAccounts.length} /></div>
           </div>
-          <div className="mt-6 flex flex-wrap gap-2.5"><button onClick={() => setModalMode({ kind: "add-gmail" })} className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-navy transition hover:-translate-y-0.5 hover:bg-primary-soft"><Plus size={16} /> Add account</button><button onClick={() => setView("ads-details")} className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"><Gauge size={16} /> Review ad health <ArrowUpRight size={15} /></button></div>
+          <div className="mt-6 flex flex-wrap gap-2.5">{isReadOnlyView ? <span className="inline-flex items-center rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white">Viewing this member&apos;s records — read only</span> : <button onClick={() => setModalMode({ kind: "add-gmail" })} className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-navy transition hover:-translate-y-0.5 hover:bg-primary-soft"><Plus size={16} /> Add account</button>}<button onClick={() => setView("ads-details")} className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"><Gauge size={16} /> Review ad health <ArrowUpRight size={15} /></button></div>
         </section>
         <FinancialSummary summary={summary} />
 
@@ -171,12 +171,12 @@ export default function DashboardPage() {
             </select>
           </div>
 
-          <button
+          {!isReadOnlyView && <button
             onClick={() => setModalMode({ kind: "add-gmail" })}
             className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_18px_rgba(0,81,207,.20)] transition hover:-translate-y-0.5 hover:bg-primary-hover"
           >
             <Plus size={16} /> Add Gmail Account
-          </button>
+          </button>}
         </div></section>
 
         {dataLoading ? (
@@ -184,24 +184,24 @@ export default function DashboardPage() {
             <Loader2 className="animate-spin text-ink-soft" size={22} />
           </div>
         ) : view === "tree" ? (
-          <AccountTree gmailAccounts={tree} callbacks={callbacks} />
+          <AccountTree gmailAccounts={tree} callbacks={isReadOnlyView ? undefined : callbacks} />
         ) : view === "cards" ? (
-          <AccountCards gmailAccounts={tree} callbacks={callbacks} />
+          <AccountCards gmailAccounts={tree} callbacks={isReadOnlyView ? undefined : callbacks} />
         ) : (
           <AdsDetailsView adsAccounts={adsAccounts} />
         )}
       </div>
 
-      <AccountModal mode={modalMode} cards={cards} onClose={() => setModalMode(null)} />
+      {!isReadOnlyView && <AccountModal mode={modalMode} cards={cards} onClose={() => setModalMode(null)} />}
 
-      <ConfirmDialog
+      {!isReadOnlyView && <ConfirmDialog
         open={pendingAction !== null}
         title={confirmTitle(pendingAction)}
         description={confirmDescription(pendingAction)}
         confirmLabel={pendingAction?.kind === "close-business" ? "Close account" : "Delete"}
         onConfirm={confirmPendingAction}
         onCancel={() => setPendingAction(null)}
-      />
+      />}
     </AppShell>
   );
 }

@@ -63,7 +63,7 @@ export default function AdsAnalysisPage() {
 }
 
 function AdsAnalysisContent() {
-  const { user, loading } = useAuth();
+  const { user, loading, viewedWorkspaceId, isReadOnlyView } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -100,22 +100,22 @@ function AdsAnalysisContent() {
 
   useEffect(() => {
     if (!user) return;
-    const unsub1 = subscribeGmailAccounts(setGmailAccounts);
-    const unsub2 = subscribeBusinessAccounts(setBusinessAccounts);
-    const unsub3 = subscribeAdsAccounts(setAdsAccounts);
+    const unsub1 = subscribeGmailAccounts(setGmailAccounts, viewedWorkspaceId);
+    const unsub2 = subscribeBusinessAccounts(setBusinessAccounts, viewedWorkspaceId);
+    const unsub3 = subscribeAdsAccounts(setAdsAccounts, viewedWorkspaceId);
     return () => {
       unsub1();
       unsub2();
       unsub3();
     };
-  }, [user]);
+  }, [user, viewedWorkspaceId]);
 
   useEffect(() => {
     if (!user) return;
-    getDailyEntriesInRange(range.start, range.end)
+    getDailyEntriesInRange(range.start, range.end, viewedWorkspaceId)
       .then(setEntries)
       .finally(() => setFetching(false));
-  }, [user, range.start, range.end]);
+  }, [user, range.start, range.end, viewedWorkspaceId]);
 
   const adsDataById = useMemo(() => {
     const map = new Map<string, { status: AdsStatus; adStatus: "created" | "not_created" }>();

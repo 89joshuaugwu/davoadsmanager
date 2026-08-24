@@ -47,7 +47,7 @@ export default function BusinessAnalysisPage() {
 }
 
 function BusinessAnalysisContent() {
-  const { user, loading } = useAuth();
+  const { user, loading, viewedWorkspaceId, isReadOnlyView } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -77,20 +77,20 @@ function BusinessAnalysisContent() {
 
   useEffect(() => {
     if (!user) return;
-    const unsub1 = subscribeGmailAccounts(setGmailAccounts);
-    const unsub2 = subscribeBusinessAccounts(setBusinessAccounts);
+    const unsub1 = subscribeGmailAccounts(setGmailAccounts, viewedWorkspaceId);
+    const unsub2 = subscribeBusinessAccounts(setBusinessAccounts, viewedWorkspaceId);
     return () => {
       unsub1();
       unsub2();
     };
-  }, [user]);
+  }, [user, viewedWorkspaceId]);
 
   useEffect(() => {
     if (!user) return;
-    getTransactionsInRange(range.start, range.end)
+    getTransactionsInRange(range.start, range.end, viewedWorkspaceId)
       .then(setTransactions)
       .finally(() => setFetching(false));
-  }, [user, range.start, range.end]);
+  }, [user, range.start, range.end, viewedWorkspaceId]);
 
   const filtered = useMemo(() => {
     return transactions.filter((t) => {

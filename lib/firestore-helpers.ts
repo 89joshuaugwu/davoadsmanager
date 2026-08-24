@@ -37,24 +37,34 @@ async function currentScope(): Promise<Scope> {
   return { uid: user.uid, workspaceId: data.workspaceId as string };
 }
 
+/** Read scope only. A caller can supply another workspace only when their profile is a Super Admin.
+ * Write helpers deliberately continue using currentScope(), so an inspected member workspace can never be edited. */
+async function readScope(requestedWorkspaceId?: string | null): Promise<Scope> {
+  const own = await currentScope();
+  if (!requestedWorkspaceId || requestedWorkspaceId === own.workspaceId) return own;
+  const profile = await getDoc(doc(db, "users", own.uid));
+  if (profile.data()?.role !== "super_admin") throw new Error("You do not have permission to view this workspace.");
+  return { ...own, workspaceId: requestedWorkspaceId };
+}
+
 function scoped(ref: ReturnType<typeof collection>, workspaceId: string) {
   return query(ref, where("workspaceId", "==", workspaceId));
 }
 
-function subscribeWorkspaceRows<T>(ref: ReturnType<typeof collection>, cb: (rows: T[]) => void) {
+function subscribeWorkspaceRows<T>(ref: ReturnType<typeof collection>, cb: (rows: T[]) => void, workspaceId?: string | null) {
   let unsubscribe: () => void = () => {};
   let cancelled = false;
-  void currentScope().then(({ workspaceId }) => {
+  void readScope(workspaceId).then(({ workspaceId }) => {
     if (cancelled) return;
     unsubscribe = onSnapshot(scoped(ref, workspaceId), (snap) => cb(snap.docs.map((item) => ({ id: item.id, ...item.data() } as T))));
   }).catch(() => cb([]));
   return () => { cancelled = true; unsubscribe(); };
 }
 
-export function subscribeGmailAccounts(cb: (rows: GmailAccount[]) => void) { return subscribeWorkspaceRows<GmailAccount>(gmailCol, cb); }
-export function subscribeBusinessAccounts(cb: (rows: BusinessAccount[]) => void) { return subscribeWorkspaceRows<BusinessAccount>(businessCol, cb); }
-export function subscribeAdsAccounts(cb: (rows: AdsAccount[]) => void) { return subscribeWorkspaceRows<AdsAccount>(adsCol, cb); }
-export function subscribeCards(cb: (rows: Card[]) => void) { return subscribeWorkspaceRows<Card>(cardsCol, cb); }
+export function subscribeGmailAccounts(cb: (rows: GmailAccount[]) => void, workspaceId?: string | null) { return subscribeWorkspaceRows<GmailAccount>(gmailCol, cb, workspaceId); }
+export function subscribeBusinessAccounts(cb: (rows: BusinessAccount[]) => void, workspaceId?: string | null) { return subscribeWorkspaceRows<BusinessAccount>(businessCol, cb, workspaceId); }
+export function subscribeAdsAccounts(cb: (rows: AdsAccount[]) => void, workspaceId?: string | null) { return subscribeWorkspaceRows<AdsAccount>(adsCol, cb, workspaceId); }
+export function subscribeCards(cb: (rows: Card[]) => void, workspaceId?: string | null) { return subscribeWorkspaceRows<Card>(cardsCol, cb, workspaceId); }
 
 export async function createGmailAccount(data: { email: string; encryptedPassword: string; tiktokAccountName?: string; tiktokManagerName?: string; notes?: string; createdAt?: number }) {
   const scope = await currentScope(); const now = Date.now();
@@ -144,13 +154,13 @@ export async function updateDailyEntry(entry: Pick<DailyEntry, "id" | "adsAccoun
 export async function deleteDailyEntry(entry: Pick<DailyEntry, "id" | "adsAccountId">) { const { workspaceId } = await currentScope(); const batch = writeBatch(db); batch.delete(doc(entriesCol, entry.id)); const transactions = await getDocs(query(txCol, where("workspaceId", "==", workspaceId), where("dailyEntryId", "==", entry.id))); transactions.docs.forEach((transaction) => batch.delete(transaction.ref)); await batch.commit(); await recomputeAdsAccountTotals(entry.adsAccountId); await recordActivity("daily_spend_deleted", "dailyEntry", entry.id); }
 
 export async function getDailyEntriesForAds(adsAccountId: string): Promise<DailyEntry[]> { const { workspaceId } = await currentScope(); const snap = await getDocs(query(entriesCol, where("workspaceId", "==", workspaceId), where("adsAccountId", "==", adsAccountId), orderBy("date", "desc"))); return snap.docs.map((item) => ({ id: item.id, ...item.data() } as DailyEntry)); }
-export async function getDailyEntriesInRange(startMs: number, endMs: number): Promise<DailyEntry[]> { const { workspaceId } = await currentScope(); const snap = await getDocs(query(entriesCol, where("workspaceId", "==", workspaceId), where("date", ">=", startMs), where("date", "<=", endMs), orderBy("date", "asc"))); return snap.docs.map((item) => ({ id: item.id, ...item.data() } as DailyEntry)); }
+export async function getDailyEntriesInRange(startMs: number, endMs: number, requestedWorkspaceId?: string | null): Promise<DailyEntry[]> { const { workspaceId } = await readScope(requestedWorkspaceId); const snap = await getDocs(query(entriesCol, where("workspaceId", "==", workspaceId), where("date", ">=", startMs), where("date", "<=", endMs), orderBy("date", "asc"))); return snap.docs.map((item) => ({ id: item.id, ...item.data() } as DailyEntry)); }
 export async function getDailyRevenue(day: string): Promise<DailyRevenue | null> { const { workspaceId } = await currentScope(); const snap = await getDocs(query(revenueCol, where("workspaceId", "==", workspaceId), where("day", "==", day))); const row = snap.docs[0]; return row ? ({ id: row.id, ...row.data() } as DailyRevenue) : null; }
 export async function saveDailyRevenue(input: { day: string; revenueUsd: number; exchangeRate: number; note?: string }) { if (input.revenueUsd < 0 || input.exchangeRate <= 0) throw new Error("Revenue cannot be negative and exchange rate must be greater than zero."); const scope = await currentScope(); const now = Date.now(); const existing = await getDocs(query(revenueCol, where("workspaceId", "==", scope.workspaceId), where("day", "==", input.day))); const payload = { revenueUsd: input.revenueUsd, exchangeRate: input.exchangeRate, note: input.note ?? "", updatedAt: now }; let id: string; if (existing.docs[0]) { id = existing.docs[0].id; await updateDoc(existing.docs[0].ref, payload); } else { const ref = await addDoc(revenueCol, { ...payload, day: input.day, workspaceId: scope.workspaceId, ownerId: scope.uid, createdAt: now }); id = ref.id; } await recordActivity("daily_revenue_saved", "dailyRevenue", id, input.day, { revenueUsd: input.revenueUsd, exchangeRate: input.exchangeRate }); return id; }
-export async function getTransactionsInRange(startMs: number, endMs: number): Promise<Transaction[]> { const { workspaceId } = await currentScope(); const snap = await getDocs(query(txCol, where("workspaceId", "==", workspaceId), where("date", ">=", startMs), where("date", "<=", endMs), orderBy("date", "desc"))); return snap.docs.map((item) => ({ id: item.id, ...item.data() } as Transaction)); }
+export async function getTransactionsInRange(startMs: number, endMs: number, requestedWorkspaceId?: string | null): Promise<Transaction[]> { const { workspaceId } = await readScope(requestedWorkspaceId); const snap = await getDocs(query(txCol, where("workspaceId", "==", workspaceId), where("date", ">=", startMs), where("date", "<=", endMs), orderBy("date", "desc"))); return snap.docs.map((item) => ({ id: item.id, ...item.data() } as Transaction)); }
 export async function isEmailWhitelisted(email: string): Promise<boolean> { const snap = await getDoc(doc(collection(db, "whitelistedUsers"), email.toLowerCase())); return snap.exists(); }
 
 export async function createCard(data: { name: string; lastFourDigits: string; businessAccountId?: string; businessName?: string; notes?: string }) { const scope = await currentScope(); const now = Date.now(); const ref = await addDoc(cardsCol, { workspaceId: scope.workspaceId, ownerId: scope.uid, name: data.name, lastFourDigits: data.lastFourDigits, businessAccountId: data.businessAccountId ?? "", businessName: data.businessName ?? "", status: "active" as CardStatus, notes: data.notes ?? "", createdAt: now, updatedAt: now }); await recordActivity("card_created", "card", ref.id, data.name); return ref; }
 export async function updateCard(id: string, data: Partial<{ name: string; lastFourDigits: string; businessAccountId: string; businessName: string; status: CardStatus; notes: string }>) { await updateDoc(doc(cardsCol, id), { ...data, updatedAt: Date.now() }); await recordActivity("card_updated", "card", id, data.name); }
 export async function deleteCard(id: string) { await deleteDoc(doc(cardsCol, id)); await recordActivity("card_deleted", "card", id); }
-export async function getCardFundingTransactions(): Promise<Transaction[]> { const { workspaceId } = await currentScope(); const snap = await getDocs(query(txCol, where("workspaceId", "==", workspaceId), where("type", "==", "funding"))); return snap.docs.map((item) => ({ id: item.id, ...item.data() } as Transaction)).filter((transaction) => !!transaction.cardId); }
+export async function getCardFundingTransactions(requestedWorkspaceId?: string | null): Promise<Transaction[]> { const { workspaceId } = await readScope(requestedWorkspaceId); const snap = await getDocs(query(txCol, where("workspaceId", "==", workspaceId), where("type", "==", "funding"))); return snap.docs.map((item) => ({ id: item.id, ...item.data() } as Transaction)).filter((transaction) => !!transaction.cardId); }
