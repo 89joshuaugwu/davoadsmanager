@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser, writeAudit } from "@/lib/server-auth";
 
-const entityTypes = new Set(["gmailAccount", "businessAccount", "adsAccount", "dailyEntry", "card", "transaction"]);
+const entityTypes = new Set(["gmailAccount", "businessAccount", "adsAccount", "dailyEntry", "card", "transaction", "dailyRevenue"]);
 
 export async function POST(request: NextRequest) {
   try {

@@ -39,6 +39,10 @@ service cloud.firestore {
       allow read: if canReadData(); allow create: if canCreateData(); allow update, delete: if canEditData();
     }
 
+    match /dailyRevenue/{docId} {
+      allow read: if canReadData(); allow create: if canCreateData(); allow update, delete: if canEditData();
+    }
+
     match /cards/{docId} {
       allow read: if canReadData(); allow create: if canCreateData(); allow update, delete: if canEditData();
     }

@@ -36,11 +36,25 @@ export interface AuditLog {
   actorId: string;
   actorEmail: string;
   action: string;
-  entityType: "gmailAccount" | "businessAccount" | "adsAccount" | "dailyEntry" | "card" | "transaction" | "user" | "workspace";
+  entityType: "gmailAccount" | "businessAccount" | "adsAccount" | "dailyEntry" | "card" | "transaction" | "dailyRevenue" | "user" | "workspace";
   entityId: string;
   entityLabel?: string;
   details?: Record<string, unknown>;
   createdAt: number;
+}
+
+/** Daily AdSense earnings kept separately from ad spend so mixed currencies remain auditable. */
+export interface DailyRevenue {
+  id: string;
+  workspaceId?: string;
+  ownerId?: string;
+  /** Local day in YYYY-MM-DD format. One record per workspace and day. */
+  day: string;
+  revenueUsd: number;
+  exchangeRate: number;
+  note?: string;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface GmailAccount {

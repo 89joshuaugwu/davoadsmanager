@@ -4,7 +4,7 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { MAX_ADS_PER_BUSINESS, MAX_BUSINESS_PER_GMAIL } from "@/lib/utils";
-import type { AdCreationStatus, AdsAccount, AdsStatus, BusinessAccount, Card, CardStatus, DailyEntry, GmailAccount, GmailStatus, Transaction } from "@/types";
+import type { AdCreationStatus, AdsAccount, AdsStatus, BusinessAccount, Card, CardStatus, DailyEntry, DailyRevenue, GmailAccount, GmailStatus, Transaction } from "@/types";
 
 const gmailCol = collection(db, "gmailAccounts");
 const businessCol = collection(db, "businessAccounts");
@@ -12,10 +12,11 @@ const adsCol = collection(db, "adsAccounts");
 const txCol = collection(db, "transactions");
 const entriesCol = collection(db, "dailyEntries");
 const cardsCol = collection(db, "cards");
+const revenueCol = collection(db, "dailyRevenue");
 
 type Scope = { uid: string; workspaceId: string };
 
-async function recordActivity(action: string, entityType: "gmailAccount" | "businessAccount" | "adsAccount" | "dailyEntry" | "card" | "transaction", entityId: string, entityLabel?: string, details?: Record<string, unknown>) {
+async function recordActivity(action: string, entityType: "gmailAccount" | "businessAccount" | "adsAccount" | "dailyEntry" | "card" | "transaction" | "dailyRevenue", entityId: string, entityLabel?: string, details?: Record<string, unknown>) {
   try {
     const token = await auth.currentUser?.getIdToken();
     if (!token) return;
@@ -144,6 +145,8 @@ export async function deleteDailyEntry(entry: Pick<DailyEntry, "id" | "adsAccoun
 
 export async function getDailyEntriesForAds(adsAccountId: string): Promise<DailyEntry[]> { const { workspaceId } = await currentScope(); const snap = await getDocs(query(entriesCol, where("workspaceId", "==", workspaceId), where("adsAccountId", "==", adsAccountId), orderBy("date", "desc"))); return snap.docs.map((item) => ({ id: item.id, ...item.data() } as DailyEntry)); }
 export async function getDailyEntriesInRange(startMs: number, endMs: number): Promise<DailyEntry[]> { const { workspaceId } = await currentScope(); const snap = await getDocs(query(entriesCol, where("workspaceId", "==", workspaceId), where("date", ">=", startMs), where("date", "<=", endMs), orderBy("date", "asc"))); return snap.docs.map((item) => ({ id: item.id, ...item.data() } as DailyEntry)); }
+export async function getDailyRevenue(day: string): Promise<DailyRevenue | null> { const { workspaceId } = await currentScope(); const snap = await getDocs(query(revenueCol, where("workspaceId", "==", workspaceId), where("day", "==", day))); const row = snap.docs[0]; return row ? ({ id: row.id, ...row.data() } as DailyRevenue) : null; }
+export async function saveDailyRevenue(input: { day: string; revenueUsd: number; exchangeRate: number; note?: string }) { if (input.revenueUsd < 0 || input.exchangeRate <= 0) throw new Error("Revenue cannot be negative and exchange rate must be greater than zero."); const scope = await currentScope(); const now = Date.now(); const existing = await getDocs(query(revenueCol, where("workspaceId", "==", scope.workspaceId), where("day", "==", input.day))); const payload = { revenueUsd: input.revenueUsd, exchangeRate: input.exchangeRate, note: input.note ?? "", updatedAt: now }; let id: string; if (existing.docs[0]) { id = existing.docs[0].id; await updateDoc(existing.docs[0].ref, payload); } else { const ref = await addDoc(revenueCol, { ...payload, day: input.day, workspaceId: scope.workspaceId, ownerId: scope.uid, createdAt: now }); id = ref.id; } await recordActivity("daily_revenue_saved", "dailyRevenue", id, input.day, { revenueUsd: input.revenueUsd, exchangeRate: input.exchangeRate }); return id; }
 export async function getTransactionsInRange(startMs: number, endMs: number): Promise<Transaction[]> { const { workspaceId } = await currentScope(); const snap = await getDocs(query(txCol, where("workspaceId", "==", workspaceId), where("date", ">=", startMs), where("date", "<=", endMs), orderBy("date", "desc"))); return snap.docs.map((item) => ({ id: item.id, ...item.data() } as Transaction)); }
 export async function isEmailWhitelisted(email: string): Promise<boolean> { const snap = await getDoc(doc(collection(db, "whitelistedUsers"), email.toLowerCase())); return snap.exists(); }
 

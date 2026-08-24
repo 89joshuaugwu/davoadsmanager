@@ -1,6 +1,6 @@
 "use client";
 
-import { CreditCard, FileText, LayoutDashboard, LineChart, LogOut, MoreHorizontal, PieChart, ShieldCheck, X } from "lucide-react";
+import { CreditCard, DollarSign, FileText, LayoutDashboard, LineChart, LogOut, MoreHorizontal, PieChart, ShieldCheck, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
@@ -21,7 +21,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user, profile, signOutUser } = useAuth();
   const [moreOpen, setMoreOpen] = useState(false);
   const navItems = profile?.role === "super_admin"
-    ? [...NAV_ITEMS, { href: "/admin", label: "Admin & audit", shortLabel: "Admin", icon: ShieldCheck }]
+    ? [...NAV_ITEMS, { href: "/admin/daily-revenue", label: "Daily revenue", shortLabel: "Revenue", icon: DollarSign }, { href: "/admin", label: "Admin & audit", shortLabel: "Admin", icon: ShieldCheck }]
     : NAV_ITEMS;
   const mobilePrimary = navItems.filter((item) => ["/dashboard", "/reports", "/analysis/ads", "/cards"].includes(item.href));
   const mobileMore = navItems.filter((item) => !mobilePrimary.includes(item));
