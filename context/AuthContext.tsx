@@ -39,7 +39,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       unsubscribeProfile();
       if (firebaseUser?.email) {
         const whitelisted = await isEmailWhitelisted(firebaseUser.email);
-        if (whitelisted) {
+        const token = await firebaseUser.getIdToken();
+        const bootstrap = !whitelisted ? await fetch("/api/admin/bootstrap", { headers: { Authorization: `Bearer ${token}` } }).then((response) => response.ok ? response.json() : { allowed: false }).catch(() => ({ allowed: false })) : { allowed: false };
+        if (whitelisted || bootstrap.allowed) {
           setUser(firebaseUser);
           setAccessDenied(false);
           unsubscribeProfile = onSnapshot(doc(db, "users", firebaseUser.uid), (snapshot) => setProfile(snapshot.exists() ? ({ id: snapshot.id, ...snapshot.data() } as AppUser) : null));
