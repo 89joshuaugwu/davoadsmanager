@@ -110,6 +110,9 @@ export default function DashboardPage() {
     onUpdateAdsStatus: (a, status: AdsStatus) =>
       updateAdsAccountStatus(a.id, status, status === "paused" ? "Paused — high CPR" : "Blocked"),
   };
+  const readOnlyCallbacks: TreeCallbacks = {
+    onEditGmail: () => {}, onDeleteGmail: () => {}, onAddBusiness: () => {}, onEditBusiness: () => {}, onDeleteBusiness: () => {}, onAddFunding: () => {}, onCloseBusiness: () => {}, onAddAds: () => {}, onEditAds: () => {}, onDeleteAds: () => {}, onLogSpend: () => {}, onUpdateAdsStatus: () => {},
+  };
 
   async function confirmPendingAction() {
     if (!pendingAction) return;
@@ -184,9 +187,9 @@ export default function DashboardPage() {
             <Loader2 className="animate-spin text-ink-soft" size={22} />
           </div>
         ) : view === "tree" ? (
-          <AccountTree gmailAccounts={tree} callbacks={isReadOnlyView ? undefined : callbacks} />
+          <AccountTree gmailAccounts={tree} callbacks={isReadOnlyView ? readOnlyCallbacks : callbacks} />
         ) : view === "cards" ? (
-          <AccountCards gmailAccounts={tree} callbacks={isReadOnlyView ? undefined : callbacks} />
+          <AccountCards gmailAccounts={tree} callbacks={isReadOnlyView ? readOnlyCallbacks : callbacks} />
         ) : (
           <AdsDetailsView adsAccounts={adsAccounts} />
         )}
